@@ -7,6 +7,7 @@
 #include <vector>
 #include <cstdint>
 #include <cassert>
+#include <stdexcept>
 #include "no_lsan_debug.h"
 #include <bmp.h>
 
