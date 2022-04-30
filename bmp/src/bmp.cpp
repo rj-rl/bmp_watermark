@@ -4,15 +4,30 @@
 #include <stdexcept>
 
 using namespace std;
-using byte_t = uint8_t;
+
+BMP BMP::from_file(const std::string& filename)
+{
+    return BMP(filename);
+}
 
 BMP::BMP(const string& filename)
 {
-    ifstream file{ "filename", ios::binary | ios::in };
+    ifstream file{ filename, ios::binary | ios::in };
     if (!file) {
-        throw runtime_error{ "Could not open the .bmp" };
+        throw runtime_error{ "Could not open the .bmp file" };
+    }
+    // TODO: reverse byte order in the multibyte fields for big-endians
+    file.read(reinterpret_cast<char*>(&file_header), sizeof(file_header));
+    file.read(reinterpret_cast<char*>(&info_header), sizeof(info_header));
+
+    if (info_header.compression != 0u) {
+        throw runtime_error{ "Bitmap data must be in uncompressed RGB format" };
     }
 
-    // TODO: write constructing a BMP from file
-    
+    width = info_header.width_px * 3;
+    size_t padding = (width % 4 != 0) ? (4 - width % 4) : 0;
+    padded_width = width + padding;
+    size_t pixel_data_size = padded_width * info_header.height_px;
+    pixel_data.resize(pixel_data_size);
+    file.read(reinterpret_cast<char*>(pixel_data.data()), pixel_data_size);
 }
