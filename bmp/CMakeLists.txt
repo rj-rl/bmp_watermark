@@ -8,4 +8,5 @@ target_include_directories(
     bmp
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
 )

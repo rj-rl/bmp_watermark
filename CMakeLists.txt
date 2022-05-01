@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_compile_options(-Wall -Werror)
 
-# add debug defines
+# debug defines
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_definitions(_LIBCPP_DEBUG=1)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -31,5 +31,5 @@ set(
     -fno-optimize-sibling-calls
     )
 
-target_compile_options(sanitized_watermark PUBLIC ${SANITIZE_OPTIONS})
 target_link_options(sanitized_watermark PUBLIC ${SANITIZE_OPTIONS})
+target_compile_options(sanitized_watermark PUBLIC ${SANITIZE_OPTIONS})
