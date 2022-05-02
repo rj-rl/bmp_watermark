@@ -6,14 +6,14 @@
 
 #pragma pack(push, 1)  // don't pad the fields
 
-struct BMPFileHeader {
+struct BMP_File_Header {
     uint16_t file_type;  // this should be 0x4D42 = 'BM'
     uint32_t file_size;       // file size in bytes
     uint32_t reserved;
     uint32_t data_offset;       // offset to where the actual pixel data starts
 };
 
-struct BMPInfoHeader {
+struct BMP_Info_Header {
     uint32_t size;            // size of this header in bytes
     int32_t  width_px;        // width of bitmap in pixels
     int32_t  height_px;       // width of bitmap in pixels; negative value
@@ -31,8 +31,8 @@ struct BMPInfoHeader {
 #pragma pack(pop)
 
 struct BMP {
-    BMPFileHeader       file_header;
-    BMPInfoHeader       info_header;
+    BMP_File_Header       file_header;
+    BMP_Info_Header       info_header;
     std::vector<byte_t> pixel_data;
 
     static BMP from_file(const std::string& filename);

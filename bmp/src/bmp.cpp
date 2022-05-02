@@ -63,52 +63,64 @@ BMP::BMP(const string& filename)
     }
 }
 
+//============================= Conversion logic ==============================
+
 /*
     TV levels (aka studio swing):
-        Y in [16, 235]; Cb, Cr in [16, 240]
+        Y in [16, 235] and Cb, Cr in [16, 240]
 
     PC levels (aka full swing):
         Y, Cb, Cr in [0, 255]
 */
 
-// TV levels
-static vector<int32_t> conversion_matrix = {
-     66, 129,  25,
-    -38, -74, 112,
-    112, -94, -18
+using Matrix = vector<int32_t>;
+
+static const Matrix TV_matrix = {
+     66,  129,   25,
+    -38,  -74,  112,
+    112,  -94,  -18
 };
 
-struct YCbCr_pixel {
+static const Matrix PC_matrix = {
+     77,  150,   29,
+    -43,  -84,  127,
+    127, -106,  -21
+};
+
+struct YCbCr_px {
     byte_t Y = 0;
     byte_t Cb = 0;
     byte_t Cr = 0;
 };
 
 // converts an RGB pixel into a YCbCr pixel
-YCbCr_pixel RGB_to_YCbCr_px(byte_t red, byte_t green, byte_t blue)
+YCbCr_px RGB_to_YCbCr_px(byte_t red, byte_t green, byte_t blue)
 {
-    YCbCr_pixel pixel;
+    YCbCr_px pixel;
     size_t row = 0u;
 
     // convert
-    uint16_t Y = conversion_matrix[3 * row + 0] * red
-        + conversion_matrix[3 * row + 1] * green
-        + conversion_matrix[3 * row + 2] * blue;
+    uint16_t Y
+        = TV_matrix[3 * row + 0] * red
+        + TV_matrix[3 * row + 1] * green
+        + TV_matrix[3 * row + 2] * blue;
     ++row;
 
-    int16_t Cb = conversion_matrix[3 * row + 0] * red
-        + conversion_matrix[3 * row + 1] * green
-        + conversion_matrix[3 * row + 2] * blue;
+    int16_t Cb
+        = TV_matrix[3 * row + 0] * red
+        + TV_matrix[3 * row + 1] * green
+        + TV_matrix[3 * row + 2] * blue;
     ++row;
     
-    int16_t Cr = conversion_matrix[3 * row + 0] * red
-        + conversion_matrix[3 * row + 1] * green
-        + conversion_matrix[3 * row + 2] * blue;
+    int16_t Cr
+        = TV_matrix[3 * row + 0] * red
+        + TV_matrix[3 * row + 1] * green
+        + TV_matrix[3 * row + 2] * blue;
 
     // scale
     Y  = (Y + 128) >> 8;
-    Cb = (Y + 128) >> 8;
-    Cr = (Y + 128) >> 8;
+    Cb = (Cb + 128) >> 8;
+    Cr = (Cr + 128) >> 8;
 
     // offset
     pixel.Y = Y + 16;

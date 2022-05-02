@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_compile_options(-Wall -Werror)
 
 # debug defines
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_definitions(_LIBCPP_DEBUG=1)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_compile_definitions(_GLIBCXX_DEBUG _GLIBCXX_DEBUG_PEDANTIC)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_definitions(_LIBCPP_DEBUG=1)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_definitions(_GLIBCXX_DEBUG _GLIBCXX_DEBUG_PEDANTIC)
+    endif()
 endif()
 
 add_subdirectory(bmp)
