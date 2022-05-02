@@ -19,14 +19,19 @@ endif()
 
 add_subdirectory(bmp)
 add_subdirectory(conversions)
+add_subdirectory(subsample-algo)
 
 add_executable(watermark main.cpp)
 add_executable(sanitized_watermark main.cpp)
 
-target_link_libraries(watermark PRIVATE bmp)
-target_link_libraries(watermark PRIVATE conversions)
-target_link_libraries(sanitized_watermark PRIVATE bmp)
-target_link_libraries(sanitized_watermark PRIVATE conversions)
+set(LIBS bmp conversions subsample-algo)
+
+target_link_libraries(watermark PRIVATE ${LIBS})
+#target_link_libraries(watermark PRIVATE conversions)
+#target_link_libraries(watermark PRIVATE subsample-algo)
+target_link_libraries(sanitized_watermark PRIVATE ${LIBS})
+#target_link_libraries(sanitized_watermark PRIVATE conversions)
+#target_link_libraries(sanitized_watermark PRIVATE subsample-algo)
 
 # sanitizers
 set(

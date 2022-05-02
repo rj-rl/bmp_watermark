@@ -2,6 +2,7 @@
 #include <bmp.h>
 
 #include <algorithm>
+#include <functional>  // for std::bind
 #include <cmath>
 #include <cassert>
 
@@ -92,42 +93,4 @@ vector<byte_t> BMP_to_YUV444(const BMP& bmp)
         YUV_data[2 * image_size_px + i] = Cr;
     }
     return YUV_data;
-}
-
-vector<byte_t> BMP_to_YUV420(const BMP& bmp)
-{
-    // TODO: bmp width is assumed to be multiple of 2, height is assumed even
-
-    auto YUV444_data = BMP_to_YUV444(bmp);
-
-    size_t image_size_px = bmp.width_px() * bmp.height_px();
-    // 1 bpp for luminance, 1/2 bpp for chrominance
-    vector<byte_t> YUV420_data(image_size_px * 3 / 2);
-
-    // luminance remains at full resolution
-    copy(begin(YUV444_data), begin(YUV444_data) + image_size_px,
-         begin(YUV420_data));
-
-    auto average = [&]() -> byte_t
-    {
-        static size_t pos = image_size_px;
-        byte_t average = (YUV444_data[pos] +
-                          YUV444_data[pos + 1] +
-                          YUV444_data[pos + bmp.width_px()] +
-                          YUV444_data[pos + bmp.width_px() + 1]) / 4;
-        pos += 2;
-        // skip every other line
-        if (pos % bmp.width_px() == 0) {
-            pos += bmp.width_px();
-        }
-        return average;
-    };
-
-    auto start_Cb = begin(YUV420_data) + image_size_px;
-    auto start_Cr = begin(YUV420_data) + image_size_px + image_size_px / 4;
-
-    generate(start_Cb, start_Cr, average);
-    generate(start_Cr, end(YUV420_data), average);
-
-    return YUV420_data;
 }
