@@ -2,6 +2,7 @@
 // TODO: parse command line arguments
 
 #include <bmp.h>
+#include <conversions.h>
 #include <byte.h>
 #include <no_lsan_debug.h>
 
@@ -16,10 +17,10 @@ using namespace std;
 
 int main(int argc, const char* argv[])
 {
-    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/bw.bmp");
+    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/multi.bmp");
 
     auto yuv444 = BMP_to_YCbCr(bmp);
-    ofstream{"/home/rj_rl/Desktop/work/test-output/bw444.yuv"}.write(
+    ofstream{"/home/rj_rl/Desktop/work/test-output/multi444.yuv"}.write(
         reinterpret_cast<char*>(&yuv444[0]), yuv444.size()
     );
 

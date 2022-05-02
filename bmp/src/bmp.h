@@ -1,3 +1,5 @@
+#pragma once
+
 #include <byte.h>
 
 #include <cstdint>
@@ -7,10 +9,10 @@
 #pragma pack(push, 1)  // don't pad the fields
 
 struct BMP_File_Header {
-    uint16_t file_type;  // this should be 0x4D42 = 'BM'
+    uint16_t file_type;       // this should be 0x4D42 = 'BM'
     uint32_t file_size;       // file size in bytes
     uint32_t reserved;
-    uint32_t data_offset;       // offset to where the actual pixel data starts
+    uint32_t data_offset;     // offset to where the actual pixel data starts
 };
 
 struct BMP_Info_Header {
@@ -31,8 +33,8 @@ struct BMP_Info_Header {
 #pragma pack(pop)
 
 struct BMP {
-    BMP_File_Header       file_header;
-    BMP_Info_Header       info_header;
+    BMP_File_Header     file_header;
+    BMP_Info_Header     info_header;
     std::vector<byte_t> pixel_data;
 
     static BMP from_file(const std::string& filename);
@@ -40,5 +42,3 @@ struct BMP {
 private:
     explicit BMP(const std::string& filename);
 };
-
-std::vector<byte_t> BMP_to_YCbCr(const BMP& bmp);

@@ -18,12 +18,15 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(bmp)
+add_subdirectory(conversions)
 
 add_executable(watermark main.cpp)
 add_executable(sanitized_watermark main.cpp)
 
 target_link_libraries(watermark PRIVATE bmp)
+target_link_libraries(watermark PRIVATE conversions)
 target_link_libraries(sanitized_watermark PRIVATE bmp)
+target_link_libraries(sanitized_watermark PRIVATE conversions)
 
 # sanitizers
 set(
