@@ -18,8 +18,8 @@ struct BMP_File_Header {
 struct BMP_Info_Header {
     uint32_t size;            // size of this header in bytes
     int32_t  width_px;        // width of bitmap in pixels
-    int32_t  height_px;       // width of bitmap in pixels; negative value
-                                 // means bitmap is in top-down orientation (!)
+    int32_t  height_px;       // width of bitmap in pixels; if value < 0,
+                                 // then bitmap is in top-down orientation (!)
     uint16_t planes;          // always 1
     uint16_t bit_count;       // bits per pixel
     uint32_t compression;     // 0 means uncompressed
@@ -38,6 +38,8 @@ struct BMP {
     std::vector<byte_t> pixel_data;
 
     static BMP from_file(const std::string& filename);
+    std::size_t width_px() const;
+    std::size_t height_px() const;
 
 private:
     explicit BMP(const std::string& filename);

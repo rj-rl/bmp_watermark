@@ -12,6 +12,11 @@ BMP BMP::from_file(const string& filename)
     return BMP{filename};
 }
 
+size_t BMP::width_px() const { return info_header.width_px; }
+
+size_t BMP::height_px() const { return -info_header.height_px; }
+
+
 BMP::BMP(const string& filename)
 {
     ifstream file{filename, ios::binary | ios::in};

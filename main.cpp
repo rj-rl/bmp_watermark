@@ -17,17 +17,17 @@ using namespace std;
 
 int main(int argc, const char* argv[])
 {
-    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/multi.bmp");
+    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/multi84.bmp");
 
-    auto yuv444 = BMP_to_YCbCr(bmp);
-    ofstream{"/home/rj_rl/Desktop/work/test-output/multi444.yuv"}.write(
-        reinterpret_cast<char*>(&yuv444[0]), yuv444.size()
+    auto yuv420 = BMP_to_YUV420(bmp);
+    ofstream{"/home/rj_rl/Desktop/work/test-output/multi84_420.yuv"}.write(
+        reinterpret_cast<char*>(&yuv420[0]), yuv420.size()
     );
 
     cout << hex;
     auto line_sz = bmp.info_header.width_px * 3;
     size_t i = 0u;
-    for (auto chunk : yuv444) {
+    for (auto chunk : yuv420) {
         cout.width(2);
         cout << +chunk << ' ';
         ++i;
