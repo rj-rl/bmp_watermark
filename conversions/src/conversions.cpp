@@ -1,6 +1,7 @@
 #include <conversions.h>
 #include <bmp.h>
 
+#include <cmath>
 #include <cassert>
 
 using namespace std;
@@ -81,7 +82,8 @@ vector<byte_t> BMP_to_YCbCr(const BMP& bmp)
     const auto& pixels = bmp.pixel_data;
 
     vector<byte_t> result(pixels.size());
-    size_t image_size_px = bmp.info_header.width_px * bmp.info_header.height_px;
+    size_t image_size_px
+        = bmp.info_header.width_px * abs(bmp.info_header.height_px);
 
     for (size_t i = 0; i < image_size_px; ++i) {
         // BGR channel order is assumed

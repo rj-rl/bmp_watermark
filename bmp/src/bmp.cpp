@@ -35,24 +35,26 @@ BMP::BMP(const string& filename)
 
     size_t width = info_header.width_px * 3;
     size_t height = abs(info_header.height_px);
-    size_t pixel_data_size = width * height;
-    size_t pad_size = (width % 4 != 0) ? (4 - width % 4) : 0;
 
-    // the bitmap is usually stored bottom-up
-    // so we fill the pixel_data bottom-up as well
+    // the bitmap is usually stored bottom-up;
+    // we flip it by filling the pixel_data in reverse order
     int32_t start = height - 1;
     int32_t end = -1;
     int32_t step = -1;
     // negative height_px means the bitmap is in top-down order,
-    // so we fill pixel_data top-down
+    // so we fill pixel_data in natural order
     if (info_header.height_px < 0) {
         start = 0;
         end = height;
         step = 1;
     }
 
+    size_t pixel_data_size = width * height;
     pixel_data.resize(pixel_data_size);
+
+    size_t pad_size = (width % 4 != 0) ? (4 - width % 4) : 0;
     vector<byte_t> padding(pad_size);
+
     file.seekg(file_header.data_offset);
     for (int32_t i = start; i != end; i += step) {
         file.read(reinterpret_cast<char*>(&pixel_data[i * width]), width);
@@ -61,4 +63,6 @@ BMP::BMP(const string& filename)
             file.read(reinterpret_cast<char*>(&padding[0]), pad_size);
         }
     }
+    // bitmap is now stored top-down, update the height field
+    info_header.height_px = -abs(info_header.height_px);
 }
