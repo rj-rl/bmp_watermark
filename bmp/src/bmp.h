@@ -35,9 +35,9 @@ struct BMP_Info_Header {
 
 // BGR channel order is assumed
 struct RGB_px {
-    Utility::byte_t B;
-    Utility::byte_t G;
-    Utility::byte_t R;
+    Utility::byte_t B = 0u;
+    Utility::byte_t G = 0u;
+    Utility::byte_t R = 0u;
 };
 
 struct BMP {

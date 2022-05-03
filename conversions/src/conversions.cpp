@@ -1,5 +1,6 @@
 #include <conversions.h>
 #include <bmp.h>
+#include <yuv.h>
 
 #include <algorithm>
 #include <cmath>
@@ -26,12 +27,6 @@ static const vector<int32_t> PC_matrix = {
      77,  150,   29,
     -43,  -84,  127,
     127, -106,  -21
-};
-
-struct YCbCr_px {
-    byte_t Y;
-    byte_t Cb;
-    byte_t Cr;
 };
 
 // converts an RGB pixel into a YCbCr pixel
@@ -66,23 +61,23 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
                     static_cast<byte_t>(Cr)};
 }
 
-vector<byte_t> BMP_to_YUV444(const BMP& bmp)
+YUV444 BMP_to_YUV444(const BMP& bmp)
 {
     const auto& RGB_data = bmp.pixel_data;
+    YUV444 yuv(bmp.width(), bmp.height());
 
-    vector<byte_t> YUV_data(RGB_data.size() * bmp.info_header.bit_count / 8);
     size_t image_size_px = bmp.width() * bmp.height();
 
     for (size_t i = 0; i < image_size_px; ++i) {
         // BGR channel order is assumed
         auto [Y, Cb, Cr] = RGB_to_YCbCr_px(RGB_data[i]);
         // luminance plane
-        YUV_data[i] = Y;
+        yuv.data[i] = Y;
         // chrominance planes
-        YUV_data[image_size_px + i] = Cb;
-        YUV_data[2 * image_size_px + i] = Cr;
+        yuv.data[image_size_px + i] = Cb;
+        yuv.data[2 * image_size_px + i] = Cr;
     }
-    return YUV_data;
+    return yuv;
 }
 
 size_t calc_chroma_count_420(size_t width, size_t height)

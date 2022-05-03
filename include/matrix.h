@@ -1,18 +1,20 @@
 #pragma once
 
-#include <stdexcept>
+#include <vector>
 #include <iterator>
+#include <stdexcept>
 #include <stddef.h>
 
 namespace Utility {
 
 // abstracts contiguously stored elements as a rectangular matrix
-template <typename BidirIt>
+template <typename Contiguous_Iterator = std::vector<byte_t>::iterator>
 class Matrix {
 public:
-    using T = typename BidirIt::value_type;
-    
-    Matrix(BidirIt begin, BidirIt end,
+    //using Iterator = typename ContiguousArray::iterator;
+    using T = typename Contiguous_Iterator::value_type;
+
+    Matrix(Contiguous_Iterator begin, Contiguous_Iterator end,
            size_t width = 0u, size_t height = 0u)
         : begin_{begin}
         , end_{end}
@@ -61,8 +63,8 @@ public:
     }
 
 private:
-    BidirIt begin_;
-    BidirIt end_;
+    Contiguous_Iterator begin_;
+    Contiguous_Iterator end_;
     size_t width_;
     size_t height_;
 };

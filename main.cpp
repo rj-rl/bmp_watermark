@@ -12,23 +12,24 @@
 #include <ios>      // temp, for std::hex manipulator
 #include <string>
 #include <vector>
-#include <stdexcept>
-#include <functional>
 
 using namespace std;
 using namespace Utility;
-using namespace Subsample;
 
+/*
+    argv[1] - path to bmp
+    argv[2] - path to yuv
+    argv[3] - yuv width
+    argv[4] - yuv height
+*/
 int main(int argc, const char* argv[])
 {
-    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/sample.bmp");
+    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/oddity.bmp");
 
-    auto yuv420 = YUV444_to_YUV420(
-        bmp,
-        mean_mat<typename vector<byte_t>::iterator>
-    );
+    auto yuv444 = BMP_to_YUV444(bmp);
+    auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::median<>);
 
-    ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_mean.yuv", ios::binary}.write(
+    ofstream{"/home/rj_rl/Desktop/work/output-mine/oddity_median.yuv", ios::binary}.write(
         reinterpret_cast<char*>(&yuv420[0]), yuv420.size()
     );
 
