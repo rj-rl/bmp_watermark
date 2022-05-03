@@ -1,6 +1,6 @@
 add_library(
-    conversions 
-    src/conversions.h 
+    conversions
+    src/conversions.h
     src/conversions.cpp
     )
 
