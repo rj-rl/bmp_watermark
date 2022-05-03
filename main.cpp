@@ -1,4 +1,4 @@
-// TODO: assert(Размер bmp картинки может быть меньше либо равен размеру картинки входного видеоряда)
+// TODO: Размер bmp картинки может быть меньше либо равен размеру картинки входного видеоряда
 // TODO: parse command line arguments
 
 #include <bmp.h>
@@ -13,22 +13,36 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <functional>
 
 using namespace std;
+using namespace Utility;
+using namespace Subsample;
 
 int main(int argc, const char* argv[])
 {
-    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/multi.bmp");
+    BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/sample.bmp");
 
-    auto yuv420 = BMP_to_YUV420(bmp, Subsample::mean);
-    ofstream{"/home/rj_rl/Desktop/work/test-output/multi_mean.yuv", ios::binary}.write(
+    auto yuv420 = YUV444_to_YUV420(
+        bmp,
+        mean_mat<typename vector<byte_t>::iterator>
+    );
+
+    ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_mean.yuv", ios::binary}.write(
         reinterpret_cast<char*>(&yuv420[0]), yuv420.size()
     );
 
+
+
+
+
+
+
+    
     bool needs_print = false;
     if (needs_print) {
         cout << hex;
-        auto line_sz = bmp.info_header.width_px * 3;
+        auto line_sz = bmp.info_header.width * 3;
         size_t i = 0u;
         for (auto chunk : yuv420) {
             cout.width(2);

@@ -2,11 +2,11 @@
 #include <bmp.h>
 
 #include <algorithm>
-#include <functional>  // for std::bind
 #include <cmath>
 #include <cassert>
 
 using namespace std;
+using namespace Utility;
 
 /*
     TV levels (aka studio swing):
@@ -32,12 +32,6 @@ struct YCbCr_px {
     byte_t Y;
     byte_t Cb;
     byte_t Cr;
-};
-
-struct RGB_px {
-    byte_t R;
-    byte_t G;
-    byte_t B;
 };
 
 // converts an RGB pixel into a YCbCr pixel
@@ -76,16 +70,12 @@ vector<byte_t> BMP_to_YUV444(const BMP& bmp)
 {
     const auto& RGB_data = bmp.pixel_data;
 
-    vector<byte_t> YUV_data(RGB_data.size());
-    size_t image_size_px = bmp.width_px() * bmp.height_px();
+    vector<byte_t> YUV_data(RGB_data.size() * bmp.info_header.bit_count / 8);
+    size_t image_size_px = bmp.width() * bmp.height();
 
     for (size_t i = 0; i < image_size_px; ++i) {
         // BGR channel order is assumed
-        auto [Y, Cb, Cr] = RGB_to_YCbCr_px({
-            RGB_data[3 * i + 2]  /* red */,
-            RGB_data[3 * i + 1]  /* green */,
-            RGB_data[3 * i]      /* blue */
-        });
+        auto [Y, Cb, Cr] = RGB_to_YCbCr_px(RGB_data[i]);
         // luminance plane
         YUV_data[i] = Y;
         // chrominance planes
@@ -94,3 +84,26 @@ vector<byte_t> BMP_to_YUV444(const BMP& bmp)
     }
     return YUV_data;
 }
+
+size_t calc_chroma_count_420(size_t width, size_t height)
+{
+    size_t image_size_px = width * height;
+    // exactly how many samples of chrominance we need depends on
+    // height and width being odd or even
+    bool is_height_even = (height % 2 == 0);
+    bool is_width_even = (width % 2 == 0);
+
+    if (is_height_even && is_width_even) {
+        return image_size_px / 2;
+    }
+    else if (!is_height_even && !is_width_even) {
+        return (image_size_px + width + height + 1) / 2;
+    }
+    else if (!is_height_even) {
+        return (image_size_px + height) / 2;
+    }
+    else {
+        return (image_size_px + width) / 2;
+    }
+}
+
