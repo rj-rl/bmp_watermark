@@ -23,11 +23,6 @@ struct YUV {
     Type type = Type::Planar420;
     std::vector<Utility::byte_t> data;
 
-    YUV(size_t width, size_t height, Type type);
-
-    static YUV from_file(const std::string& filename,
-                         size_t width, size_t height, Type type);
-
-private:
     YUV(const std::string& filename, size_t width, size_t height, Type type);
+    YUV(vector<Utility::byte_t> data, size_t width, size_t height, Type type);
 };

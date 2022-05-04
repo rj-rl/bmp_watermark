@@ -40,20 +40,12 @@ struct RGB_px {
     Utility::byte_t R = 0u;
 };
 
-// define these for convenient sampling from RGB array
-bool   operator< (const RGB_px& a, const RGB_px& b);
-RGB_px operator+ (const RGB_px& a, const RGB_px& b);
-RGB_px operator/ (const RGB_px& a, size_t num);
-
 struct BMP {
     BMP_File_Header     file_header;
     BMP_Info_Header     info_header;
     std::vector<RGB_px> pixel_data;
 
-    static BMP from_file(const std::string& filename);
+    explicit BMP(const std::string& filename);
     size_t width() const;
     size_t height() const;
-
-private:
-    explicit BMP(const std::string& filename);
 };

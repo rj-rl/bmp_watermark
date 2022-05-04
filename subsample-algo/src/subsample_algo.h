@@ -49,8 +49,9 @@ Value_Type mean(const Utility::Matrix<Contiguous_It>& mat,
                 size_t row, size_t col)
 {
     auto subsample = select(mat, row, col);
-    Value_Type sum = 0u;
-    sum = std::accumulate(std::begin(subsample), std::end(subsample), 0u);
+    Value_Type sum = std::accumulate(
+        std::begin(subsample), std::end(subsample), Value_Type{}
+    );
     return sum / subsample.size();
 };
 
