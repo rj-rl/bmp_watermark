@@ -6,6 +6,7 @@
 #include <matrix.h>
 
 #include <vector>
+#include <utility>
 #include <stddef.h>
 
 YUV BMP_to_YUV444(const BMP& bmp);
@@ -14,14 +15,16 @@ YUV BMP_to_YUV444(const BMP& bmp);
 // of given width and height using 4:2:0 scheme
 size_t calc_chroma_count_420(size_t width, size_t height);
 
+YUV BMP_to_YUV420(const BMP& bmp);
+
 template<typename Callable>
-std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV& src, Callable subsample)
+YUV YUV444_to_YUV420(const YUV& src, Callable subsample)
 {
     using namespace std;
 
-    size_t width = src.width;
-    size_t height = src.height;
-    size_t image_size_px = width * height;
+    auto width = src.width;
+    auto height = src.height;
+    auto image_size_px = width * height;
     // number of chroma subsamples
     size_t chroma_sub_count = calc_chroma_count_420(width, height);
 
@@ -58,5 +61,6 @@ std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV& src, Callable subsample
             col = 0; row += 2;
         }
     }
-    return yuv420_data;
+
+    return YUV{move(yuv420_data), width, height, YUV::Type::Planar420};
 }

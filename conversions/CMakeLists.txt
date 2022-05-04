@@ -11,6 +11,7 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/bmp/src
     ${CMAKE_SOURCE_DIR}/yuv/src
+    ${CMAKE_SOURCE_DIR}/subsample-algo/src
 )
 
 target_link_libraries(conversions PUBLIC bmp)

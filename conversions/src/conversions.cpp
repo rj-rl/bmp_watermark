@@ -1,4 +1,5 @@
 #include <conversions.h>
+#include <subsample_algo.h>
 #include <bmp.h>
 #include <yuv.h>
 
@@ -29,6 +30,53 @@ static const vector<int32_t> PC_matrix = {
     127, -106,  -21
 };
 
+// converts an RGB pixel into the luma component of a YCbCr pixel
+byte_t RGB_to_Y(RGB_px rgb_px)
+{
+    uint16_t Y = TV_matrix[0] * rgb_px.R
+        + TV_matrix[1] * rgb_px.G
+        + TV_matrix[2] * rgb_px.B;
+    // scale down to 8 bit
+    Y = (Y + 128) >> 8;
+    // offset
+    return Y + 16;
+}
+
+struct Chroma {
+    byte_t Cb = 0u;
+    byte_t Cr = 0u;
+};
+
+// converts an RGB pixel into the two chroma components of a YCbCr pixel
+Chroma RGB_to_CbCr(RGB_px rgb_px)
+{
+    int16_t Cb = TV_matrix[3] * rgb_px.R
+        + TV_matrix[4] * rgb_px.G
+        + TV_matrix[5] * rgb_px.B;
+
+    int16_t Cr = TV_matrix[6] * rgb_px.R
+        + TV_matrix[7] * rgb_px.G
+        + TV_matrix[8] * rgb_px.B;
+    // scale down to 8 bit
+    Cb = (Cb + 128) >> 8;
+    Cr = (Cr + 128) >> 8;
+    // offset
+    Cb = Cb + 128;
+    Cr = Cr + 128;
+    // sanity check
+    assert(Cb > 0 && Cr > 0);
+
+    return Chroma(Cb, Cr);
+}
+
+// converts an RGB pixel into a YCbCr pixel
+YCbCr_px RGB_to_YCbCr_px_NEW(RGB_px rgb_px)
+{
+    auto Y = RGB_to_Y(rgb_px);
+    auto [Cb, Cr] = RGB_to_CbCr(rgb_px);
+    return YCbCr_px{Y, Cb, Cr};
+}
+
 // converts an RGB pixel into a YCbCr pixel
 YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
 {
@@ -53,8 +101,6 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
     Y = Y + 16;
     Cb = Cb + 128;
     Cr = Cr + 128;
-    // sanity check
-    assert(Cb > 0 && Cr > 0);
 
     return YCbCr_px{static_cast<byte_t>(Y),
                     static_cast<byte_t>(Cb),
@@ -63,10 +109,12 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
 
 YUV BMP_to_YUV444(const BMP& bmp)
 {
+    auto width = bmp.width();
+    auto height = bmp.height();
+    auto image_size_px = width * height;
+    vector<byte_t> yuv_data(image_size_px * 3);  // 3 bytes per pixel
     const auto& RGB_data = bmp.pixel_data;
-    size_t image_size_px = bmp.width() * bmp.height();
 
-    vector<byte_t> yuv_data(image_size_px * 3);
     for (size_t i = 0; i < image_size_px; ++i) {
         // BGR channel order is assumed
         auto [Y, Cb, Cr] = RGB_to_YCbCr_px(RGB_data[i]);
@@ -76,12 +124,41 @@ YUV BMP_to_YUV444(const BMP& bmp)
         yuv_data[image_size_px + i] = Cb;
         yuv_data[2 * image_size_px + i] = Cr;
     }
-    return YUV{yuv_data, bmp.width(), bmp.height(), YUV::Type::Planar444};
+
+    return YUV{move(yuv_data), width, height, YUV::Type::Planar444};
+}
+
+YUV BMP_to_YUV420(const BMP& bmp)
+{
+    auto width = bmp.width();
+    auto height = bmp.height();
+    auto image_size_px = width * height;
+    // number of chroma subsamples
+    auto chroma_sub_count = calc_chroma_count_420(width, height);
+
+    const auto& RGB_data = bmp.pixel_data;
+    vector<byte_t> yuv_data(image_size_px + chroma_sub_count);
+
+    auto dst_Y_begin = begin(yuv_data) + image_size_px;
+    auto dst_Cb_begin = begin(yuv_data) + image_size_px;
+    auto dst_Cr_begin = dst_Cb_begin + chroma_sub_count / 2;
+
+    for (size_t i = 0; i < image_size_px; ++i) {
+        // BGR channel order is assumed
+        auto [Y, Cb, Cr] = RGB_to_YCbCr_px(RGB_data[i]);
+        // luminance plane
+        yuv_data[i] = Y;
+        // chrominance planes
+        yuv_data[image_size_px + i] = Cb;
+        yuv_data[2 * image_size_px + i] = Cr;
+    }
+
+    return YUV{move(yuv_data), width, height, YUV::Type::Planar420};
 }
 
 size_t calc_chroma_count_420(size_t width, size_t height)
 {
-    size_t image_size_px = width * height;
+    auto image_size_px = width * height;
     // exactly how many samples of chrominance we need depends on
     // height and width being odd or even
     bool is_height_even = (height % 2 == 0);

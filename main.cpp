@@ -30,8 +30,8 @@ int main(int argc, const char* argv[])
     auto yuv444 = BMP_to_YUV444(bmp);
     auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::mean<>);
 
-    ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_median2.yuv", ios::binary}.write(
-        reinterpret_cast<char*>(&yuv420[0]), yuv420.size()
+    ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_median.yuv", ios::binary}.write(
+        reinterpret_cast<char*>(&yuv420.data[0]), yuv420.data.size()
     );
 
     YUV yuv{"/home/rj_rl/Desktop/work/pics/oddity.yuv", 3, 3, YUV::Type::Planar420};
@@ -46,7 +46,7 @@ int main(int argc, const char* argv[])
         cout << hex;
         auto line_sz = bmp.info_header.width * 3;
         size_t i = 0u;
-        for (auto chunk : yuv420) {
+        for (auto chunk : yuv420.data) {
             cout.width(2);
             cout << +chunk << ' ';
             ++i;
