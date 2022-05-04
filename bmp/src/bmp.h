@@ -43,7 +43,7 @@ struct RGB_px {
 struct BMP {
     BMP_File_Header     file_header;
     BMP_Info_Header     info_header;
-    std::vector<RGB_px> pixel_data;
+    std::vector<RGB_px> data;
 
     explicit BMP(const std::string& filename);
     size_t width() const;

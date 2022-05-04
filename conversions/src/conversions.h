@@ -13,41 +13,35 @@ YUV BMP_to_YUV444(const BMP& bmp);
 
 // returns the number of chroma samples needed for an image
 // of given width and height using 4:2:0 scheme
-size_t calc_chroma_count_420(size_t width, size_t height);
+size_t chroma_count_420(size_t width, size_t height);
 
 YUV BMP_to_YUV420(const BMP& bmp);
 
-template<typename Callable>
-YUV YUV444_to_YUV420(const YUV& src, Callable subsample)
+template<typename TCallable>
+YUV YUV444_to_YUV420(const YUV& src, TCallable subsample)
 {
     using namespace std;
+    using namespace Utility;
 
-    auto width = src.width;
-    auto height = src.height;
-    auto image_size_px = width * height;
+    const auto width = src.width;
+    const auto height = src.height;
+    const auto image_size_px = width * height;
     // number of chroma subsamples
-    size_t chroma_sub_count = calc_chroma_count_420(width, height);
+    const auto chroma_sub_count = chroma_count_420(width, height);
 
-    vector<Utility::byte_t> yuv420_data(image_size_px + chroma_sub_count);
+    vector<byte_t> yuv420_data(image_size_px + chroma_sub_count);
     auto dst_Cb_begin = begin(yuv420_data) + image_size_px;
     auto dst_Cr_begin = dst_Cb_begin + chroma_sub_count / 2;
 
     auto src_Cb_begin = begin(src.data) + image_size_px;
-    auto src_Cb_end = src_Cb_begin + image_size_px;
-    auto src_Cr_begin = src_Cb_end;
-    auto src_Cr_end = end(src.data);
+    auto src_Cr_begin = src_Cb_begin + image_size_px;
 
     // luminance remains at full resolution
     copy(begin(src.data), src_Cb_begin, begin(yuv420_data));
 
     // interpret source Cb/Cr values as matrices for convenience
-    Utility::Matrix src_Cb_mat{
-        src_Cb_begin, src_Cr_begin, width, height
-    };
-    Utility::Matrix src_Cr_mat{
-        src_Cr_begin, src_Cr_end, width, height
-    };
-
+    const Matrix src_Cb_mat{src_Cb_begin, width, height};
+    const Matrix src_Cr_mat{src_Cr_begin, width, height};
     size_t row = 0u;
     size_t col = 0u;
 

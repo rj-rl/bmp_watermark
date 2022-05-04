@@ -25,35 +25,16 @@ using namespace Utility;
 */
 int main(int argc, const char* argv[])
 {
-    BMP bmp{"/home/rj_rl/Desktop/work/pics/sample.bmp"};
+    BMP bmp{"/home/rj_rl/Desktop/work/pics/nice.bmp"};
 
     auto yuv444 = BMP_to_YUV444(bmp);
     auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::mean<>);
 
-    ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_median.yuv", ios::binary}.write(
+    ofstream{"/home/rj_rl/Desktop/work/output-mine/nice_mean.yuv", ios::binary}.write(
         reinterpret_cast<char*>(&yuv420.data[0]), yuv420.data.size()
     );
 
     YUV yuv{"/home/rj_rl/Desktop/work/pics/oddity.yuv", 3, 3, YUV::Type::Planar420};
 
-
-
-
-
-    
-    bool needs_print = false;
-    if (needs_print) {
-        cout << hex;
-        auto line_sz = bmp.info_header.width * 3;
-        size_t i = 0u;
-        for (auto chunk : yuv420.data) {
-            cout.width(2);
-            cout << +chunk << ' ';
-            ++i;
-            if (i % 3 == 0) cout << ' ';
-            if (i % line_sz == 0) cout << '\n';
-        }
-        cout << '\n';
-    }
     return 0;
 }

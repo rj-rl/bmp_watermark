@@ -15,7 +15,7 @@ struct YCbCr_px {
 struct YUV {
     enum class Type {
         Planar444,
-        Planar420
+        Planar420,
     };
 
     size_t width  = 0u;

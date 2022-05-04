@@ -3,43 +3,45 @@
 #include <vector>
 #include <iterator>
 #include <stdexcept>
+#include <concepts>
 #include <stddef.h>
 
 namespace Utility {
 
 // abstracts contiguously stored elements as a rectangular matrix
-template <typename Contiguous_Iterator = std::vector<byte_t>::iterator>
+template <typename TValue = const byte_t>
 class Matrix {
 public:
-    Matrix(Contiguous_Iterator begin, Contiguous_Iterator end,
-           size_t width = 0u, size_t height = 0u)
-        : begin_{begin}
-        , end_{end}
+    template <typename TContiguous_Iter>
+        requires std::contiguous_iterator<TContiguous_Iter>
+    Matrix(TContiguous_Iter begin, size_t width = 0u, size_t height = 0u)
+        : begin_{&*begin}  // convert iterator to pointer
         , width_{width}
         , height_{height}
     {
-        if (static_cast<size_t>(std::distance(begin, end)) != width * height) {
-            throw std::runtime_error{"Invalid matrix width/height"};
-        }
+        static_assert(std::same_as<
+            typename std::iterator_traits<TContiguous_Iter>::value_type,
+            std::remove_const_t<TValue> >
+        );
     }
 
     // returns i-th element of the matrix, counting top-to-bottom/left-to-right
-    auto& operator[] (size_t i)
+    TValue& operator[] (size_t i)
     {
         return begin_[i];
     }
 
-    auto operator[] (size_t i) const
+    TValue operator[] (size_t i) const
     {
         return begin_[i];
     }
 
-    auto& operator() (size_t row, size_t col)
+    TValue& operator() (size_t row, size_t col)
     {
         return begin_[row * width_ + col];
     }
 
-    auto operator() (size_t row, size_t col) const
+    TValue operator() (size_t row, size_t col) const
     {
         return begin_[row * width_ + col];
     }
@@ -56,12 +58,11 @@ public:
 
     size_t size() const
     {
-        return std::distance(begin_, end_);
+        return width_ * height_;
     }
 
 private:
-    Contiguous_Iterator begin_;
-    Contiguous_Iterator end_;
+    TValue* begin_;
     size_t width_;
     size_t height_;
 };
