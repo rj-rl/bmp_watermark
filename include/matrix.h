@@ -11,9 +11,6 @@ namespace Utility {
 template <typename Contiguous_Iterator = std::vector<byte_t>::iterator>
 class Matrix {
 public:
-    //using Iterator = typename ContiguousArray::iterator;
-    using T = typename Contiguous_Iterator::value_type;
-
     Matrix(Contiguous_Iterator begin, Contiguous_Iterator end,
            size_t width = 0u, size_t height = 0u)
         : begin_{begin}
@@ -27,22 +24,22 @@ public:
     }
 
     // returns i-th element of the matrix, counting top-to-bottom/left-to-right
-    T& operator[] (size_t i)
+    auto& operator[] (size_t i)
     {
         return begin_[i];
     }
 
-    T operator[] (size_t i) const
+    auto operator[] (size_t i) const
     {
         return begin_[i];
     }
 
-    T& operator() (size_t row, size_t col)
+    auto& operator() (size_t row, size_t col)
     {
         return begin_[row * width_ + col];
     }
 
-    T operator() (size_t row, size_t col) const
+    auto operator() (size_t row, size_t col) const
     {
         return begin_[row * width_ + col];
     }

@@ -18,20 +18,22 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(bmp)
+add_subdirectory(yuv)
 add_subdirectory(conversions)
 add_subdirectory(subsample-algo)
 
 add_executable(watermark main.cpp)
 add_executable(sanitized_watermark main.cpp)
 
-set(LIBS bmp conversions subsample-algo)
-
+set(
+    LIBS
+    bmp
+    yuv
+    conversions
+    subsample-algo
+)
 target_link_libraries(watermark PRIVATE ${LIBS})
-#target_link_libraries(watermark PRIVATE conversions)
-#target_link_libraries(watermark PRIVATE subsample-algo)
 target_link_libraries(sanitized_watermark PRIVATE ${LIBS})
-#target_link_libraries(sanitized_watermark PRIVATE conversions)
-#target_link_libraries(sanitized_watermark PRIVATE subsample-algo)
 
 # sanitizers
 set(

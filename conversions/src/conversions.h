@@ -8,14 +8,14 @@
 #include <vector>
 #include <stddef.h>
 
-YUV444 BMP_to_YUV444(const BMP& bmp);
+YUV BMP_to_YUV444(const BMP& bmp);
 
 // returns the number of chroma samples needed for an image
 // of given width and height using 4:2:0 scheme
 size_t calc_chroma_count_420(size_t width, size_t height);
 
 template<typename Callable>
-std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV444& src, Callable subsample)
+std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV& src, Callable subsample)
 {
     size_t width = src.width;
     size_t height = src.height;
@@ -50,10 +50,9 @@ std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV444& src, Callable subsam
         *dst_Cb_begin++ = subsample(src_Cb_mat, row, col);
         *dst_Cr_begin++ = subsample(src_Cr_mat, row, col);
 
-        col += 2;
-        // skip every other line
-        if (col % width == 0 ||  // width is even
-            col % width == 1) {  // width is odd
+        col = (col + 2) % width;
+        // skip every other line (first check for even width, second for odd)
+        if (col == 0 || col == 1) {
             col = 0; row += 2;
         }
     }

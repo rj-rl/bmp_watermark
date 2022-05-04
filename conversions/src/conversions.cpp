@@ -61,10 +61,10 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
                     static_cast<byte_t>(Cr)};
 }
 
-YUV444 BMP_to_YUV444(const BMP& bmp)
+YUV BMP_to_YUV444(const BMP& bmp)
 {
     const auto& RGB_data = bmp.pixel_data;
-    YUV444 yuv(bmp.width(), bmp.height());
+    YUV yuv(bmp.width(), bmp.height(), YUV::Type::Planar444);
 
     size_t image_size_px = bmp.width() * bmp.height();
 

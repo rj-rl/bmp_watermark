@@ -1,6 +1,5 @@
 #include <bmp.h>
 
-#include <string>
 #include <fstream>
 #include <cmath>
 #include <stdexcept>
@@ -28,7 +27,7 @@ BMP::BMP(const string& filename)
 {
     ifstream file{filename, ios::binary | ios::in};
     if (!file) {
-        throw runtime_error{"Could not open the .bmp file"};
+        throw runtime_error{"Could not open the BMP file"};
     }
 
     // TODO: reverse byte order in the multibyte fields for big-endians
