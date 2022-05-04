@@ -24,5 +24,5 @@ struct YUV {
     std::vector<Utility::byte_t> data;
 
     YUV(const std::string& filename, size_t width, size_t height, Type type);
-    YUV(vector<Utility::byte_t> data, size_t width, size_t height, Type type);
+    YUV(std::vector<Utility::byte_t> data, size_t width, size_t height, Type type);
 };

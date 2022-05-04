@@ -64,20 +64,19 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
 YUV BMP_to_YUV444(const BMP& bmp)
 {
     const auto& RGB_data = bmp.pixel_data;
-    YUV yuv(bmp.width(), bmp.height(), YUV::Type::Planar444);
-
     size_t image_size_px = bmp.width() * bmp.height();
 
+    vector<byte_t> yuv_data(image_size_px * 3);
     for (size_t i = 0; i < image_size_px; ++i) {
         // BGR channel order is assumed
         auto [Y, Cb, Cr] = RGB_to_YCbCr_px(RGB_data[i]);
         // luminance plane
-        yuv.data[i] = Y;
+        yuv_data[i] = Y;
         // chrominance planes
-        yuv.data[image_size_px + i] = Cb;
-        yuv.data[2 * image_size_px + i] = Cr;
+        yuv_data[image_size_px + i] = Cb;
+        yuv_data[2 * image_size_px + i] = Cr;
     }
-    return yuv;
+    return YUV{yuv_data, bmp.width(), bmp.height(), YUV::Type::Planar444};
 }
 
 size_t calc_chroma_count_420(size_t width, size_t height)
