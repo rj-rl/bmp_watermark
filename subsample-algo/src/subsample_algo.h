@@ -42,23 +42,25 @@ auto select(const Utility::Matrix<Contiguous_It>& mat, size_t row, size_t col)
 
 // returns arithmetic mean from a 2x2 sample at [row, col]
 template <
-    typename Contiguous_It = std::vector<Utility::byte_t>::const_iterator
+    typename Value_Type = Utility::byte_t,
+    typename Contiguous_It = std::vector<Value_Type>::const_iterator
 >
-Utility::byte_t mean(const Utility::Matrix<Contiguous_It>& mat,
-                     size_t row, size_t col)
+Value_Type mean(const Utility::Matrix<Contiguous_It>& mat,
+                size_t row, size_t col)
 {
     auto subsample = select(mat, row, col);
-    size_t sum = 0u;
+    Value_Type sum = 0u;
     sum = std::accumulate(std::begin(subsample), std::end(subsample), 0u);
     return sum / subsample.size();
 };
 
 // returns median value from a 2x2 sample at [row, col]
 template <
-    typename Contiguous_It = std::vector<Utility::byte_t>::const_iterator
+    typename Value_Type = Utility::byte_t,
+    typename Contiguous_It = std::vector<Value_Type>::const_iterator
 >
-Utility::byte_t median(const Utility::Matrix<Contiguous_It>& mat,
-                       size_t row, size_t col)
+Value_Type median(const Utility::Matrix<Contiguous_It>& mat,
+                  size_t row, size_t col)
 {
     auto subsample = select(mat, row, col);
     if (subsample.size() == 1) return subsample[0];
@@ -72,10 +74,11 @@ Utility::byte_t median(const Utility::Matrix<Contiguous_It>& mat,
 
 // returns max value from a 2x2 sample at [row, col]
 template <
-    typename Contiguous_It = std::vector<Utility::byte_t>::const_iterator
+    typename Value_Type = Utility::byte_t,
+    typename Contiguous_It = std::vector<Value_Type>::const_iterator
 >
-Utility::byte_t max(const Utility::Matrix<Contiguous_It>& mat,
-                    size_t row, size_t col)
+Value_Type max(const Utility::Matrix<Contiguous_It>& mat,
+               size_t row, size_t col)
 {
     auto subsample = select(mat, row, col);
     return *std::max_element(std::begin(subsample), std::end(subsample));

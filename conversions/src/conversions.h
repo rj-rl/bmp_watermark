@@ -17,23 +17,25 @@ size_t calc_chroma_count_420(size_t width, size_t height);
 template<typename Callable>
 std::vector<Utility::byte_t> YUV444_to_YUV420(const YUV& src, Callable subsample)
 {
+    using namespace std;
+
     size_t width = src.width;
     size_t height = src.height;
     size_t image_size_px = width * height;
     // number of chroma subsamples
     size_t chroma_sub_count = calc_chroma_count_420(width, height);
 
-    std::vector<Utility::byte_t> yuv420_data(image_size_px + chroma_sub_count);
-    auto dst_Cb_begin = std::begin(yuv420_data) + image_size_px;
+    vector<Utility::byte_t> yuv420_data(image_size_px + chroma_sub_count);
+    auto dst_Cb_begin = begin(yuv420_data) + image_size_px;
     auto dst_Cr_begin = dst_Cb_begin + chroma_sub_count / 2;
 
-    auto src_Cb_begin = std::begin(src.data) + image_size_px;
+    auto src_Cb_begin = begin(src.data) + image_size_px;
     auto src_Cb_end = src_Cb_begin + image_size_px;
     auto src_Cr_begin = src_Cb_end;
-    auto src_Cr_end = std::end(src.data);
+    auto src_Cr_end = end(src.data);
 
     // luminance remains at full resolution
-    std::copy(std::begin(src.data), src_Cb_begin, std::begin(yuv420_data));
+    copy(begin(src.data), src_Cb_begin, begin(yuv420_data));
 
     // interpret source Cb/Cr values as matrices for convenience
     Utility::Matrix src_Cb_mat{

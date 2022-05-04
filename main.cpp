@@ -28,7 +28,7 @@ int main(int argc, const char* argv[])
     BMP bmp = BMP::from_file("/home/rj_rl/Desktop/work/pics/sample.bmp");
 
     auto yuv444 = BMP_to_YUV444(bmp);
-    auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::median<>);
+    auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::mean<byte_t>);
 
     ofstream{"/home/rj_rl/Desktop/work/output-mine/sample_median2.yuv", ios::binary}.write(
         reinterpret_cast<char*>(&yuv420[0]), yuv420.size()
@@ -37,6 +37,10 @@ int main(int argc, const char* argv[])
     YUV yuv = YUV::from_file("/home/rj_rl/Desktop/work/pics/oddity.yuv",
                              3, 3, YUV::Type::Planar420);
 
+
+
+
+    
 
 
 

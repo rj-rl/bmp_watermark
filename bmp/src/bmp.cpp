@@ -7,6 +7,36 @@
 using namespace std;
 using namespace Utility;
 
+byte_t byte_clamp(int32_t num)
+{
+    if (num < 0) return 0u;
+    if (num > 255) return 255;
+    return num;
+}
+
+bool   operator< (const RGB_px& a, const RGB_px& b)
+{
+    return (a.R + a.G + a.B) < (b.R + b.G + b.B);
+}
+
+RGB_px operator+ (const RGB_px& a, const RGB_px& b)
+{
+    return RGB_px{
+        .B = byte_clamp(a.B + b.B),
+        .G = byte_clamp(a.G + b.G),
+        .R = byte_clamp(a.R + b.R)
+    };
+}
+
+RGB_px operator/ (const RGB_px& a, size_t num)
+{
+    return RGB_px{
+        .B = static_cast<byte_t>(a.B / num),
+        .G = static_cast<byte_t>(a.G / num),
+        .R = static_cast<byte_t>(a.R / num)
+    };
+}
+
 BMP BMP::from_file(const string& filename)
 {
     return BMP{filename};
