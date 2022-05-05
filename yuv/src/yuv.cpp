@@ -1,6 +1,8 @@
 #include <yuv.h>
+#include <conversions.h>
 
 #include <fstream>
+#include <filesystem>
 #include <utility>
 #include <stdexcept>
 
@@ -8,31 +10,35 @@ using namespace std;
 using namespace Utility;
 
 YUV::YUV(const string& filename, size_t width, size_t height, Type type)
-    : width{width}
+    : width {width}
     , height{height}
-    , type{type}
+    , type  {type}
 {
-    switch (type) {
-    case Type::Planar444:
-        data.resize(width * height * 3);
-        break;
-    case Type::Planar420:
-        data.resize(width * height * 3 / 2);
-        break;
-    default:
-        throw runtime_error{"Unsupported YUV format"};
-    }
-
     ifstream file{filename, ios::binary | ios::in};
     if (!file) {
         throw runtime_error{"Could not open the YUV file"};
     }
-    file.read(reinterpret_cast<char*>(&data[0]), data.size());
+
+    auto file_size = filesystem::file_size(filename);
+    data.resize(file_size);
+    file.read(reinterpret_cast<char*>(&data[0]), file_size);
 }
 
 YUV::YUV(vector<byte_t> data, size_t width, size_t height, Type type)
-    : width{width}
+    : width {width}
     , height{height}
-    , type{type}
-    , data{move(data)}
+    , type  {type}
+    , data  {move(data)}
 {}
+
+size_t YUV::frame_count() const
+{
+    switch (type) {
+    case YUV::Type::Planar444:
+        return data.size() / (3 * width * height);
+    case YUV::Type::Planar420:
+        return data.size() / (width * height + chroma_count_420(width, height));
+    default:
+        throw runtime_error{"Invalid YUV type"};
+    }
+}

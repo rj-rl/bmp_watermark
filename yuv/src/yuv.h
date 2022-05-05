@@ -20,9 +20,14 @@ struct YUV {
 
     size_t width  = 0u;
     size_t height = 0u;
-    Type type = Type::Planar420;
+    Type   type   = Type::Planar420;
     std::vector<Utility::byte_t> data;
 
-    YUV(const std::string& filename, size_t width, size_t height, Type type);
-    YUV(std::vector<Utility::byte_t> data, size_t width, size_t height, Type type);
+    // ctors
+    YUV(const std::string& filename,
+        size_t width, size_t height, Type type);
+    YUV(std::vector<Utility::byte_t> data,
+        size_t width, size_t height, Type type);
+
+    size_t frame_count() const;
 };

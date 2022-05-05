@@ -9,4 +9,7 @@ target_include_directories(
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/conversions/src
 )
+
+target_link_libraries(yuv PUBLIC conversions)

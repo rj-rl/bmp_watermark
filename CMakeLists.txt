@@ -20,6 +20,7 @@ endif()
 add_subdirectory(bmp)
 add_subdirectory(yuv)
 add_subdirectory(conversions)
+add_subdirectory(watermark-lib)
 add_subdirectory(subsample-algo)
 
 add_executable(watermark main.cpp)
@@ -30,6 +31,7 @@ set(
     bmp
     yuv
     conversions
+    watermark-lib
     subsample-algo
 )
 target_link_libraries(watermark PRIVATE ${LIBS})

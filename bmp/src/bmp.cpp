@@ -7,16 +7,6 @@
 using namespace std;
 using namespace Utility;
 
-size_t BMP::width() const
-{
-    return info_header.width;
-}
-
-size_t BMP::height() const
-{
-    return -info_header.height;
-}
-
 BMP::BMP(const string& filename)
 {
     ifstream file{filename, ios::binary | ios::in};
@@ -70,4 +60,14 @@ BMP::BMP(const string& filename)
     }
     // bitmap is now stored top-down, update the height field
     info_header.height = -abs(info_header.height);
+}
+
+size_t BMP::width() const
+{
+    return info_header.width;
+}
+
+size_t BMP::height() const
+{
+    return -info_header.height;
 }

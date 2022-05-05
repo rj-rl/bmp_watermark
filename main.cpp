@@ -1,16 +1,15 @@
-// TODO: Размер bmp картинки может быть меньше либо равен размеру картинки входного видеоряда
 // TODO: parse command line arguments
 
 #include <bmp.h>
 #include <yuv.h>
 #include <conversions.h>
+#include <watermark.h>
 #include <subsample_algo.h>
 #include <byte.h>
 #include <no_lsan_debug.h>
 
 #include <iostream> // temp
 #include <fstream>  // temp
-#include <ios>      // temp, for std::hex manipulator
 #include <string>
 #include <vector>
 
@@ -25,17 +24,14 @@ using namespace Utility;
 */
 int main(int argc, const char* argv[])
 {
-    BMP bmp{"/home/rj_rl/Desktop/work/pics/nice.bmp"};
+    YUV video{"/home/rj_rl/Desktop/work/pics/flower.yuv", 352, 288, YUV::Type::Planar420};
+    BMP bmp{"/home/rj_rl/Desktop/work/pics/crourb.bmp"};
 
-    auto yuv444 = BMP_to_YUV444(bmp);
-    //auto yuv420 = YUV444_to_YUV420(yuv444, Sample::mean<>);
-    auto yuv420 = BMP_to_YUV420(bmp);
+    add_watermark(video, bmp);
 
-    ofstream{"/home/rj_rl/Desktop/work/output-mine/nice_mean.yuv", ios::binary}.write(
-        reinterpret_cast<char*>(&yuv420.data[0]), yuv420.data.size()
+    ofstream{"/home/rj_rl/Desktop/work/output-mine/crourb-flower.yuv", ios::binary}.write(
+        reinterpret_cast<char*>(&video.data[0]), video.data.size()
     );
-
-    YUV yuv{"/home/rj_rl/Desktop/work/pics/oddity.yuv", 3, 3, YUV::Type::Planar420};
 
     return 0;
 }
