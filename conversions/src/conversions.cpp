@@ -147,25 +147,28 @@ YUV BMP_to_YUV420(const BMP& bmp)
     const auto chroma_sub_count = chroma_count_420(width, height);
 
     vector<byte_t> yuv_data(image_size_px + chroma_sub_count);
-    auto dst_Y_begin = begin(yuv_data);
-    auto dst_Cb_begin = dst_Y_begin + image_size_px;
-    auto dst_Cr_begin = dst_Cb_begin + chroma_sub_count / 2;
+    auto dst_Y = begin(yuv_data);
+    auto dst_Cb = dst_Y + image_size_px;
+    auto dst_Cr = dst_Cb + chroma_sub_count / 2;
 
+    // TODO: make this a function
+    // slice RGB_mat and do them in parallel -> ez win
     const Matrix<const RGB_px> RGB_mat{begin(bmp.data), width, height};
 
     for (size_t row = 0u; row < height; ++row) {
         for (size_t col = 0u; col < width; ++col) {
             // fill luma plane
-            *dst_Y_begin++ = RGB_to_Y(RGB_mat(row, col));
+            *dst_Y++ = RGB_to_Y(RGB_mat(row, col));
 
             // sample every other pixel in every other row
             if (row % 2 == 0 && col % 2 == 0) {
                 // calculate mean RGB values
-                RGB_px mean = mean_RGB_px(Subsample::select(RGB_mat, row, col));
-                auto [Cb, Cr] = RGB_to_CbCr(mean);
+                auto [Cb, Cr] = RGB_to_CbCr(
+                    Sample::sample(RGB_mat, row, col, mean_RGB_px)
+                );
                 // fill chrominance planes
-                *dst_Cb_begin++ = Cb;
-                *dst_Cr_begin++ = Cr;
+                *dst_Cb++ = Cb;
+                *dst_Cr++ = Cr;
             }
         }
     }

@@ -5,17 +5,19 @@
 
 #include <vector>
 #include <algorithm>
+#include <execution>
 #include <numeric>
 #include <stddef.h>
 
 // TODO: add support for different subsample sizes
 
-namespace Subsample
+namespace Sample
 {
 // returns the elements of a 2x2 window (submatrix) starting at [row, col]
 // window is truncated if it doesn't fit
-template <typename T = Utility::byte_t>
-auto select(const Utility::Matrix<const T>& mat, size_t row, size_t col)
+template <typename T>
+std::vector<T> select(const Utility::Matrix<const T>& mat,
+                      size_t row, size_t col)
 {
     // 4 possible scenarios:
     //    1. [row, col] is not near an edge -> GREAT SUCCESS! window fits
@@ -38,43 +40,52 @@ auto select(const Utility::Matrix<const T>& mat, size_t row, size_t col)
             mat(row + 1, col), mat(row + 1, col + 1)};
 }
 
+// returns sample value from a 2v2 window in matrix
+// calculated according to a given sampling algorithm
+template<typename TValue, typename TSampler>
+TValue sample(const Utility::Matrix<const TValue>& mat,
+              size_t row, size_t col, TSampler sampler)
+{
+    auto elems = select(mat, row, col);
+    return sampler(elems);
+}
+
 /*
     Below are the actual sampling functions.
     These were supposed to be used for RGB data in the form of vector<RGB_px>,
     but adding RGB_px's together was awkward and unintuitive.
     My day was ruined and my disappointment immeasurable.
+    I ended up using custom mean for RGB_px
 */
 
-// returns arithmetic mean from a 2x2 sample at [row, col]
+// returns arithmetic mean of vector elements
 template <typename T = Utility::byte_t>
-T mean(const Utility::Matrix<const T>& mat, size_t row, size_t col)
+T mean(const std::vector<T>& elems)
 {
-    auto subsample = select(mat, row, col);
-    int64_t sum = std::accumulate(std::begin(subsample), std::end(subsample), 0);
-    return sum / subsample.size();
+    // note: std::reduce was a lot slower
+    int64_t sum = std::accumulate(std::begin(elems), std::end(elems), 0);
+    return sum / elems.size();
 };
 
 // returns median value from a 2x2 sample at [row, col]
 template <typename T = Utility::byte_t>
-T median(const Utility::Matrix<const T>& mat, size_t row, size_t col)
+T median(std::vector<T>& elems)
 {
-    auto subsample = select(mat, row, col);
-    if (subsample.size() == 1) return subsample[0];
+    if (elems.size() == 1) return elems[0];
 
-    std::sort(std::begin(subsample), std::end(subsample));
-    size_t middle = subsample.size() / 2;
+    std::sort(std::begin(elems), std::end(elems));
+    size_t middle = elems.size() / 2;
 
     return middle % 2 == 0
-        ? (subsample[middle - 1] + subsample[middle]) / 2
-        : subsample[middle];
+        ? (elems[middle - 1] + elems[middle]) / 2
+        : elems[middle];
 };
 
 // returns max value from a 2x2 sample at [row, col]
 template <typename T = Utility::byte_t>
-T max(const Utility::Matrix<const T>& mat, size_t row, size_t col)
+T max(const std::vector<T>& elems)
 {
-    auto subsample = select(mat, row, col);
-    return *std::max_element(std::begin(subsample), std::end(subsample));
+    return *std::max_element(std::begin(elems), std::end(elems));
 };
 
-}  // ::Subsample
+}  // ::Sample

@@ -3,6 +3,7 @@
 #include <byte.h>
 #include <bmp.h>
 #include <yuv.h>
+#include <subsample_algo.h>
 #include <matrix.h>
 
 #include <vector>
@@ -17,11 +18,12 @@ size_t chroma_count_420(size_t width, size_t height);
 
 YUV BMP_to_YUV420(const BMP& bmp);
 
-template<typename TCallable>
-YUV YUV444_to_YUV420(const YUV& src, TCallable subsample)
+template<typename TSampler>
+YUV YUV444_to_YUV420(const YUV& src, TSampler sampler)
 {
     using namespace std;
     using namespace Utility;
+    using namespace Sample;
 
     const auto width = src.width;
     const auto height = src.height;
@@ -30,24 +32,24 @@ YUV YUV444_to_YUV420(const YUV& src, TCallable subsample)
     const auto chroma_sub_count = chroma_count_420(width, height);
 
     vector<byte_t> yuv420_data(image_size_px + chroma_sub_count);
-    auto dst_Cb_begin = begin(yuv420_data) + image_size_px;
-    auto dst_Cr_begin = dst_Cb_begin + chroma_sub_count / 2;
+    auto dst_Cb = begin(yuv420_data) + image_size_px;
+    auto dst_Cr = dst_Cb + chroma_sub_count / 2;
 
-    auto src_Cb_begin = begin(src.data) + image_size_px;
-    auto src_Cr_begin = src_Cb_begin + image_size_px;
+    auto src_Cb = begin(src.data) + image_size_px;
+    auto src_Cr = src_Cb + image_size_px;
 
     // luminance remains at full resolution
-    copy(begin(src.data), src_Cb_begin, begin(yuv420_data));
+    copy(begin(src.data), src_Cb, begin(yuv420_data));
 
     // interpret source Cb/Cr values as matrices for convenience
-    const Matrix src_Cb_mat{src_Cb_begin, width, height};
-    const Matrix src_Cr_mat{src_Cr_begin, width, height};
+    const Matrix src_Cb_mat{src_Cb, width, height};
+    const Matrix src_Cr_mat{src_Cr, width, height};
     size_t row = 0u;
     size_t col = 0u;
 
     while (row < height) {
-        *dst_Cb_begin++ = subsample(src_Cb_mat, row, col);
-        *dst_Cr_begin++ = subsample(src_Cr_mat, row, col);
+        *dst_Cb++ = sample(src_Cb_mat, row, col, sampler);
+        *dst_Cr++ = sample(src_Cr_mat, row, col, sampler);
 
         col = (col + 2) % width;
         // skip every other line (first check for even width, second for odd)

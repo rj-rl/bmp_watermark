@@ -28,7 +28,8 @@ int main(int argc, const char* argv[])
     BMP bmp{"/home/rj_rl/Desktop/work/pics/nice.bmp"};
 
     auto yuv444 = BMP_to_YUV444(bmp);
-    auto yuv420 = YUV444_to_YUV420(yuv444, Subsample::mean<>);
+    //auto yuv420 = YUV444_to_YUV420(yuv444, Sample::mean<>);
+    auto yuv420 = BMP_to_YUV420(bmp);
 
     ofstream{"/home/rj_rl/Desktop/work/output-mine/nice_mean.yuv", ios::binary}.write(
         reinterpret_cast<char*>(&yuv420.data[0]), yuv420.data.size()
