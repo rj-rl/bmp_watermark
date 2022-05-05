@@ -34,24 +34,10 @@ static const vector<int32_t> PC_matrix = {
 
 size_t chroma_count_420(size_t width, size_t height)
 {
-    auto image_size = width * height;
     // exactly how many samples of chrominance we need depends on
-    // height and width being odd or even
-    bool is_height_even = (height % 2 == 0);
-    bool is_width_even = (width % 2 == 0);
-
-    if (is_height_even && is_width_even) {
-        return image_size / 2;
-    }
-    else if (!is_height_even && !is_width_even) {
-        return (image_size + width + height + 1) / 2;
-    }
-    else if (!is_height_even) {
-        return (image_size + height) / 2;
-    }
-    else {
-        return (image_size + width) / 2;
-    }
+    // height and width being odd or even;
+    // what this does is effectively 2 * ceil(width/2) * ceil(height/2)
+    return 2 * ((width + 1) / 2) * ((height + 1) / 2);
 }
 
 // returns arithmetically mean pixel among a group of pixels
