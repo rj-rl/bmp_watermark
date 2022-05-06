@@ -14,4 +14,6 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/subsample-algo/src
 )
 
-target_link_libraries(conversions PUBLIC bmp)
+find_package(Threads)
+
+target_link_libraries(conversions PUBLIC bmp yuv ${CMAKE_THREAD_LIBS_INIT})

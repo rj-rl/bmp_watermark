@@ -25,6 +25,7 @@ add_subdirectory(subsample-algo)
 
 add_executable(watermark main.cpp)
 add_executable(sanitized_watermark main.cpp)
+add_executable(thread_sanitized_watermark main.cpp)
 
 set(
     LIBS
@@ -34,16 +35,21 @@ set(
     watermark-lib
     subsample-algo
 )
+
 target_link_libraries(watermark PRIVATE ${LIBS})
 target_link_libraries(sanitized_watermark PRIVATE ${LIBS})
+target_link_libraries(thread_sanitized_watermark PRIVATE ${LIBS})
 
 # sanitizers
 set(
     SANITIZE_OPTIONS
-    -fsanitize=address,undefined 
-    -fno-omit-frame-pointer 
+    -fsanitize=address,undefined
+    -fno-omit-frame-pointer
     -fno-optimize-sibling-calls
     )
 
 target_link_options(sanitized_watermark PUBLIC ${SANITIZE_OPTIONS})
 target_compile_options(sanitized_watermark PUBLIC ${SANITIZE_OPTIONS})
+
+target_link_options(thread_sanitized_watermark PUBLIC -fsanitize=thread)
+target_compile_options(thread_sanitized_watermark PUBLIC -fsanitize=thread)

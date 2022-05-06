@@ -31,3 +31,14 @@ struct YUV {
 
     size_t frame_count() const;
 };
+
+// returns the number of chroma samples needed for an image
+// of given width and height using 4:2:0 scheme
+// (can't be less than 2, unless width == height == 0)
+inline size_t chroma_count_420(size_t width, size_t height)
+{
+    // exactly how many samples of chrominance we need depends on
+    // height and width being odd or even;
+    // what this does is effectively 2 * ceil(width/2) * ceil(height/2)
+    return 2 * ((width + 1) / 2) * ((height + 1) / 2);
+}

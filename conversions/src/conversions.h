@@ -12,12 +12,9 @@
 
 YUV BMP_to_YUV444(const BMP& bmp);
 
-// returns the number of chroma samples needed for an image
-// of given width and height using 4:2:0 scheme
-// (can't be less than 2, unless width == height == 0)
-size_t chroma_count_420(size_t width, size_t height);
-
 YUV BMP_to_YUV420(const BMP& bmp);
+
+YUV BMP_to_YUV420_par(const BMP& bmp);
 
 template<typename TSampler>
 YUV YUV444_to_YUV420(const YUV& src, TSampler sampler)

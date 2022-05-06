@@ -7,6 +7,8 @@
 
 using namespace std;
 
+// DO NOT MODIFY! this is the central piece of the entire program
+// adds dvd logo sort of animation
 void animate_dvd(int32_t& pos_y, int32_t& pos_x,
                  int32_t& step_y, int32_t& step_x, int32_t speed,
                  size_t pic_height, size_t pic_width,
@@ -26,7 +28,7 @@ bool add_watermark(YUV& vid, const BMP& bmp,
     int32_t step_y = 2 * dvd_speed;  // 2, because chroma isn't sampled
     int32_t step_x = 2 * dvd_speed;  // at odd columns and rows
 
-    const auto pic = BMP_to_YUV420(bmp);
+    const auto pic = BMP_to_YUV420_par(bmp);
     // total number of BOTH chroma components per image/frame
     const auto src_chroma_size = chroma_count_420(pic.width, pic.height);
     const auto dst_chroma_size = chroma_count_420(vid.width, vid.height);

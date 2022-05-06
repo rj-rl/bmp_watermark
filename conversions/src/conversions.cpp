@@ -5,17 +5,21 @@
 
 #include <algorithm>
 #include <cmath>
+#include <future>
+#include <thread>
 #include <cassert>
 
 using namespace std;
 using namespace Utility;
 
 /*
+    Below are two versions of RGB->YCbCr transformation matrices:
+
     TV levels (aka studio swing):
-        Y in [16, 235] and Cb, Cr in [16, 240]
+        normalizes output so that Y is in [16, 235] and Cb, Cr in [16, 240]
 
     PC levels (aka full swing):
-        Y, Cb, Cr in [0, 255]
+        does not limit output range; Y, Cb, Cr in [0, 255]
 */
 
 static const vector<int32_t> TV_matrix = {
@@ -31,14 +35,6 @@ static const vector<int32_t> PC_matrix = {
 };
 
 // =================== various utility functions & types ===================== //
-
-size_t chroma_count_420(size_t width, size_t height)
-{
-    // exactly how many samples of chrominance we need depends on
-    // height and width being odd or even;
-    // what this does is effectively 2 * ceil(width/2) * ceil(height/2)
-    return 2 * ((width + 1) / 2) * ((height + 1) / 2);
-}
 
 // returns arithmetically mean pixel among a group of pixels
 RGB_px mean_RGB_px(const vector<RGB_px>& pixels)
@@ -132,13 +128,12 @@ YUV BMP_to_YUV420(const BMP& bmp)
     // number of chroma subsamples
     const auto chroma_sub_count = chroma_count_420(width, height);
 
+    // set up the output
     vector<byte_t> yuv_data(image_size_px + chroma_sub_count);
     auto dst_Y = begin(yuv_data);
     auto dst_Cb = dst_Y + image_size_px;
     auto dst_Cr = dst_Cb + chroma_sub_count / 2;
 
-    // TODO: make this a function
-    // slice RGB_mat and do them in parallel -> ez win
     const Matrix<const RGB_px> RGB_mat{begin(bmp.data), width, height};
 
     for (size_t row = 0u; row < height; ++row) {
@@ -157,6 +152,84 @@ YUV BMP_to_YUV420(const BMP& bmp)
                 *dst_Cr++ = Cr;
             }
         }
+    }
+    return YUV{move(yuv_data), width, height, YUV::Type::Planar420};
+}
+
+vector<Matrix<const RGB_px>> split_into_batches(const BMP& bmp, size_t batch_size)
+{
+    vector<Matrix<const RGB_px>> batches;
+    auto batch_begin = begin(bmp.data);
+    size_t row = 0u;
+        
+    while (row < bmp.height()) {
+        auto batch_height = min(batch_size, bmp.height() - row);
+        batches.emplace_back(batch_begin, bmp.width(), batch_height);
+
+        row += batch_size;
+        batch_begin += batch_height * bmp.width();
+    }
+    return batches;
+}
+
+void process_batch(Matrix<const RGB_px> RGB_mat,
+                   vector<byte_t>::iterator dst_Y,
+                   vector<byte_t>::iterator dst_Cb,
+                   vector<byte_t>::iterator dst_Cr)
+{
+    for (size_t row = 0u; row < RGB_mat.height(); ++row) {
+        for (size_t col = 0u; col < RGB_mat.width(); ++col) {
+            // fill luma plane
+            *dst_Y++ = RGB_to_Y(RGB_mat(row, col));
+
+            // sample every other pixel in every other row
+            if (row % 2 == 0 && col % 2 == 0) {
+                // calculate mean RGB values
+                auto [Cb, Cr] = RGB_to_CbCr(
+                    Sample::sample(RGB_mat, row, col, mean_RGB_px)
+                );
+                // fill chrominance planes
+                *dst_Cb++ = Cb;
+                *dst_Cr++ = Cr;
+            }
+        }
+    }
+}
+
+YUV BMP_to_YUV420_par(const BMP& bmp)
+{
+    const auto width = bmp.width();
+    const auto height = bmp.height();
+    const auto image_size_px = width * height;
+    // number of chroma subsamples
+    const auto chroma_sub_count = chroma_count_420(width, height);
+
+    // set up the output
+    vector<byte_t> yuv_data(image_size_px + chroma_sub_count);
+    auto dst_Y = begin(yuv_data);
+    auto dst_Cb = dst_Y + image_size_px;
+    auto dst_Cr = dst_Cb + chroma_sub_count / 2;
+
+    const size_t concurrency = max(4u, thread::hardware_concurrency());
+    auto batch_size = max<size_t>(2, (height + (concurrency - 1)) / concurrency);
+    // we want batches to be of even height because of the subsampling
+    if (batch_size % 2 == 1) {
+        ++batch_size;
+    }
+    const auto batches = split_into_batches(bmp, batch_size);
+    vector<future<void>> futures;
+
+    for (auto batch : batches) {
+        futures.push_back(async(process_batch, batch, dst_Y, dst_Cb, dst_Cr));
+        // shift the destination pointers by how much we've just filled
+        // the respective planes: Y by the number of elements in batch
+        // Cb and Cr by 
+        dst_Y += batch.size();
+        dst_Cb += chroma_count_420(width, batch.height())/2;
+        dst_Cr += chroma_count_420(width, batch.height())/2;
+    }
+    for (auto& future : futures) {
+        future.get();
     }
     return YUV{move(yuv_data), width, height, YUV::Type::Planar420};
 }
