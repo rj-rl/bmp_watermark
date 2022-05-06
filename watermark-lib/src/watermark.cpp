@@ -7,8 +7,14 @@
 
 using namespace std;
 
+void animate_dvd(int32_t& pos_y, int32_t& pos_x,
+                 int32_t& step_y, int32_t& step_x, int32_t speed,
+                 size_t pic_height, size_t pic_width,
+                 size_t vid_height, size_t vid_width);
+
 bool add_watermark(YUV& vid, const BMP& bmp,
-                   int32_t pos_y, int32_t pos_x, int32_t speed)
+                   int32_t pos_y, int32_t pos_x,
+                   int32_t dvd_speed)
 {
     if (bmp.height() > vid.height || bmp.width() > vid.width) {
         return false;
@@ -16,6 +22,9 @@ bool add_watermark(YUV& vid, const BMP& bmp,
     // make sure the picture fits on the canvas
     pos_y = min<size_t>(pos_y, vid.height - bmp.height());
     pos_x = min<size_t>(pos_x, vid.width - bmp.width());
+    // dvd logo stuff
+    int32_t step_y = 2 * dvd_speed;  // 2, because chroma isn't sampled
+    int32_t step_x = 2 * dvd_speed;  // at odd columns and rows
 
     const auto pic = BMP_to_YUV420(bmp);
     // total number of BOTH chroma components per image/frame
@@ -33,9 +42,6 @@ bool add_watermark(YUV& vid, const BMP& bmp,
     // offsets from beginning of chroma data, i.e. beginning of pic's *data*
     const auto src_Cb_offset = pic.width * pic.height;
     const auto src_Cr_offset = src_Cb_offset + src_chroma_size / 2;
-
-    int32_t step_y = 2 * speed;  // 2, because chroma isn't sampled
-    int32_t step_x = 2 * speed;  // at odd columns and rows
 
     for (size_t frame_num = 0u; frame_num < vid.frame_count(); ++frame_num) {
         // offsets from beginning of chroma data, i.e. beginning of current *frame*
@@ -68,18 +74,30 @@ bool add_watermark(YUV& vid, const BMP& bmp,
                 dst_Cr += dst_chroma_width;
             }
         }
-        if (pos_y + pic.height + step_y > vid.height
-            || pos_y + step_y < 0) {
-            step_y *= (-1);
-        }
-        if (pos_x + pic.width + step_x > vid.width
-            || pos_x + step_x < 0) {
-            step_x *= (-1);
-        }
-        pos_y += step_y;
-        pos_x += step_x;
+        // cheeky dvd logo
+        animate_dvd(pos_y, pos_x, step_y, step_x, dvd_speed,
+                    pic.height, pic.width, vid.height, vid.width);
         // NEXT FRAME PLEASE!
         frame_begin += bytes_per_frame;
     }
     return true;
+}
+
+void animate_dvd(int32_t& pos_y, int32_t& pos_x,
+                 int32_t& step_y, int32_t& step_x, int32_t speed,
+                 size_t pic_height, size_t pic_width,
+                 size_t vid_height, size_t vid_width)
+{
+    if (pos_y + pic_height + step_y > vid_height || pos_y + step_y < 0) {
+        step_y *= (-1);
+    }
+    if (pos_x + pic_width + step_x > vid_width || pos_x + step_x < 0) {
+        step_x *= (-1);
+    }
+    pos_y += step_y;
+    pos_x += step_x;
+    pos_y = max(0, pos_y);
+    pos_x = max(0, pos_x);
+    pos_y = min<size_t>(pos_y, vid_height - pic_height);
+    pos_x = min<size_t>(pos_x, vid_width - pic_width);
 }
