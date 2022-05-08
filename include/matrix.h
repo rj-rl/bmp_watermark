@@ -26,11 +26,10 @@ public:
     }
 
     // returns i-th element of the matrix, counting top-to-bottom/left-to-right
-    TValue& operator[] (size_t i)
+    TValue& operator[] (size_t i) 
     {
         return begin_[i];
     }
-
     TValue operator[] (size_t i) const
     {
         return begin_[i];
@@ -40,7 +39,6 @@ public:
     {
         return begin_[row * width_ + col];
     }
-
     TValue operator() (size_t row, size_t col) const
     {
         return begin_[row * width_ + col];
@@ -50,15 +48,22 @@ public:
     {
         return width_;
     }
-
     size_t height() const
     {
         return height_;
     }
-
     size_t size() const
     {
         return width_ * height_;
+    }
+
+    auto begin() const
+    {
+        return begin_;
+    }
+    auto end() const
+    {
+        return begin_ + size();
     }
 
 private:

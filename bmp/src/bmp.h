@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#pragma pack(push, 1)  // don't pad the fields
+#pragma pack(push, 1)  // no padding please
 
 struct BMP_File_Header {
     uint16_t file_type;       // this should be 0x4D42 = 'BM'
@@ -31,8 +31,6 @@ struct BMP_Info_Header {
     uint32_t clrs_imprtont;   // number of important colors used,
 };
 
-#pragma pack(pop)
-
 // BGR channel order is assumed
 struct RGB_px {
     Utility::byte_t B = 0u;
@@ -40,12 +38,14 @@ struct RGB_px {
     Utility::byte_t R = 0u;
 };
 
+#pragma pack(pop)
+
 struct BMP {
     BMP_File_Header     file_header;
     BMP_Info_Header     info_header;
     std::vector<RGB_px> data;
 
     explicit BMP(const std::string& filename);
-    size_t width() const;
-    size_t height() const;
+    size_t   width() const;
+    size_t   height() const;
 };

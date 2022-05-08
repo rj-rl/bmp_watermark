@@ -34,7 +34,7 @@ struct YUV {
 
 // returns the number of chroma samples needed for an image
 // of given width and height using 4:2:0 scheme
-// (can't be less than 2, unless width == height == 0)
+// (always even, >=2 for non-zero width and height)
 inline size_t chroma_count_420(size_t width, size_t height)
 {
     // exactly how many samples of chrominance we need depends on

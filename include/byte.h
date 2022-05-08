@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <climits>
 
 namespace Utility {
 
-using byte_t = uint8_t;
+static_assert(CHAR_BIT == 8);
+using byte_t = unsigned char;
 
 } // ::Utility

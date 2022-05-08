@@ -12,8 +12,10 @@
 using namespace std;
 using namespace Utility;
 
+namespace {
+
 /*
-    Below are two versions of RGB->YCbCr transformation matrices:
+    Two versions of RGB->YCbCr transformation matrices:
 
     TV levels (aka studio swing):
         normalizes output so that Y is in [16, 235] and Cb, Cr in [16, 240]
@@ -21,14 +23,13 @@ using namespace Utility;
     PC levels (aka full swing):
         does not limit output range; Y, Cb, Cr in [0, 255]
 */
-
-static const vector<int32_t> TV_matrix = {
+constexpr int32_t TV_matrix[] = {
      66,  129,   25,
     -38,  -74,  112,
     112,  -94,  -18
 };
 
-static const vector<int32_t> PC_matrix = {
+constexpr int32_t PC_matrix[] = {
      77,  150,   29,
     -43,  -84,  127,
     127, -106,  -21
@@ -98,6 +99,52 @@ YCbCr_px RGB_to_YCbCr_px(RGB_px rgb_px)
     return YCbCr_px{Y, Cb, Cr};
 }
 
+// vertically divides a matrix into submatrices
+template <typename T>
+vector<Matrix<T>>
+split_into_batches(const Matrix<T>& matrix, size_t batch_height)
+{
+    vector<Matrix<T>> batches;
+    auto batch_begin = begin(matrix);
+    size_t row = 0u;
+
+    while (row < matrix.height()) {
+        // check if the batch fits, truncate if needed
+        auto current_batch_height = min(batch_height, matrix.height() - row);
+        batches.emplace_back(batch_begin, matrix.width(), current_batch_height);
+
+        row += current_batch_height;
+        batch_begin += current_batch_height * matrix.width();
+    }
+    return batches;
+}
+
+void process_batch(Matrix<const RGB_px> RGB_mat,
+                   vector<byte_t>::iterator dst_Y,
+                   vector<byte_t>::iterator dst_Cb,
+                   vector<byte_t>::iterator dst_Cr)
+{
+    for (size_t row = 0u; row < RGB_mat.height(); ++row) {
+        for (size_t col = 0u; col < RGB_mat.width(); ++col) {
+            // fill luma plane
+            *dst_Y++ = RGB_to_Y(RGB_mat(row, col));
+
+            // sample every other pixel in every other row
+            if (row % 2 == 0 && col % 2 == 0) {
+                // calculate mean RGB values
+                auto [Cb, Cr] = RGB_to_CbCr(
+                    Sample::sample(RGB_mat, row, col, mean_RGB_px)
+                );
+                // fill chrominance planes
+                *dst_Cb++ = Cb;
+                *dst_Cr++ = Cr;
+            }
+        }
+    }
+}
+
+}  // ::unnamed
+
 // ========================= conversion functions ========================== //
 
 YUV BMP_to_YUV444(const BMP& bmp)
@@ -156,46 +203,6 @@ YUV BMP_to_YUV420(const BMP& bmp)
     return YUV{move(yuv_data), width, height, YUV::Type::Planar420};
 }
 
-vector<Matrix<const RGB_px>> split_into_batches(const BMP& bmp, size_t batch_size)
-{
-    vector<Matrix<const RGB_px>> batches;
-    auto batch_begin = begin(bmp.data);
-    size_t row = 0u;
-        
-    while (row < bmp.height()) {
-        auto batch_height = min(batch_size, bmp.height() - row);
-        batches.emplace_back(batch_begin, bmp.width(), batch_height);
-
-        row += batch_size;
-        batch_begin += batch_height * bmp.width();
-    }
-    return batches;
-}
-
-void process_batch(Matrix<const RGB_px> RGB_mat,
-                   vector<byte_t>::iterator dst_Y,
-                   vector<byte_t>::iterator dst_Cb,
-                   vector<byte_t>::iterator dst_Cr)
-{
-    for (size_t row = 0u; row < RGB_mat.height(); ++row) {
-        for (size_t col = 0u; col < RGB_mat.width(); ++col) {
-            // fill luma plane
-            *dst_Y++ = RGB_to_Y(RGB_mat(row, col));
-
-            // sample every other pixel in every other row
-            if (row % 2 == 0 && col % 2 == 0) {
-                // calculate mean RGB values
-                auto [Cb, Cr] = RGB_to_CbCr(
-                    Sample::sample(RGB_mat, row, col, mean_RGB_px)
-                );
-                // fill chrominance planes
-                *dst_Cb++ = Cb;
-                *dst_Cr++ = Cr;
-            }
-        }
-    }
-}
-
 YUV BMP_to_YUV420_par(const BMP& bmp)
 {
     const auto width = bmp.width();
@@ -211,12 +218,17 @@ YUV BMP_to_YUV420_par(const BMP& bmp)
     auto dst_Cr = dst_Cb + chroma_sub_count / 2;
 
     const size_t concurrency = max(4u, thread::hardware_concurrency());
-    auto batch_size = max<size_t>(2, (height + (concurrency - 1)) / concurrency);
+    auto batch_height =
+        max<size_t>(2, (height + (concurrency - 1)) / concurrency);
     // we want batches to be of even height because of the subsampling
-    if (batch_size % 2 == 1) {
-        ++batch_size;
+    if (batch_height % 2 == 1) {
+        ++batch_height;
     }
-    const auto batches = split_into_batches(bmp, batch_size);
+
+    const auto batches = split_into_batches(
+        Matrix<const RGB_px>{begin(bmp.data), width, height},
+        batch_height
+    );
     vector<future<void>> futures;
 
     for (auto batch : batches) {

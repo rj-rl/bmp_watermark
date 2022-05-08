@@ -41,13 +41,14 @@ bool add_watermark(YUV& vid, const BMP& bmp,
     const auto src_chroma_width = (pic.width + 1) / 2;
     const auto dst_chroma_width = (vid.width + 1) / 2;
 
-    // offsets from beginning of chroma data, i.e. beginning of pic's *data*
+    // offsets from beginning of *source* color data
     const auto src_Cb_offset = pic.width * pic.height;
     const auto src_Cr_offset = src_Cb_offset + src_chroma_size / 2;
 
     for (size_t frame_num = 0u; frame_num < vid.frame_count(); ++frame_num) {
-        // offsets from beginning of chroma data, i.e. beginning of current *frame*
-        const auto dst_Cb_offset = frame_size + (pos_y / 2 * vid.width + pos_x) / 2;
+        // offsets from beginning of *current frame* color data
+        const auto dst_Cb_offset =
+            frame_size + (pos_y / 2 * vid.width + pos_x) / 2;
         const auto dst_Cr_offset = dst_Cb_offset + dst_chroma_size / 2;
 
         auto src_Y = begin(pic.data);
@@ -72,6 +73,7 @@ bool add_watermark(YUV& vid, const BMP& bmp,
                 // move all ptrs to their next respective row
                 src_Cb += src_chroma_width;
                 src_Cr += src_chroma_width;
+
                 dst_Cb += dst_chroma_width;
                 dst_Cr += dst_chroma_width;
             }

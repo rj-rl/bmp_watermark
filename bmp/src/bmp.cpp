@@ -71,3 +71,18 @@ size_t BMP::height() const
 {
     return -info_header.height;
 }
+
+RGB_px mean_RGB_px(const vector<RGB_px>& pixels)
+{
+    int32_t R = 0, G = 0, B = 0;
+    for (auto px : pixels) {
+        R += px.R;
+        G += px.G;
+        B += px.B;
+    }
+    return RGB_px{
+        .B = static_cast<byte_t>(B / pixels.size()),
+        .G = static_cast<byte_t>(G / pixels.size()),
+        .R = static_cast<byte_t>(R / pixels.size())
+    };
+}
