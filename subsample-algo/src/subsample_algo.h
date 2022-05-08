@@ -13,10 +13,13 @@
 
 namespace Sample
 {
+// export std names to Sample
+using namespace std;
+
 // returns the elements of a 2x2 window (submatrix) starting at [row, col]
 // window is truncated if it doesn't fit
 template <typename T>
-std::vector<T> select(const Utility::Matrix<const T>& mat,
+vector<T> select(const Utility::Matrix<const T>& mat,
                       size_t row, size_t col)
 {
     // 4 possible scenarios:
@@ -26,17 +29,17 @@ std::vector<T> select(const Utility::Matrix<const T>& mat,
     //    4. it's the last element in the matrix -> window is this 1 element
     if (col == mat.width() - 1) {
         if (row == mat.height() - 1) {   // case 4, single value
-            return std::vector{mat(row, col)};
+            return vector{mat(row, col)};
         }
         else {                           // case 2
-            return std::vector{mat(row, col), mat(row + 1, col)};
+            return vector{mat(row, col), mat(row + 1, col)};
         }
     }
     else if (row == mat.height() - 1) {  // case 3
-        return std::vector{mat(row, col), mat(row, col + 1)};
+        return vector{mat(row, col), mat(row, col + 1)};
     }
     else                                 // case 1
-        return std::vector{mat(row, col), mat(row, col + 1),
+        return vector{mat(row, col), mat(row, col + 1),
             mat(row + 1, col), mat(row + 1, col + 1)};
 }
 
@@ -53,27 +56,27 @@ TValue sample(const Utility::Matrix<const TValue>& mat,
 /*
     Below are the actual sampling functions.
     These were supposed to be used for RGB data in the form of vector<RGB_px>,
-    but adding RGB_px's together was awkward and unintuitive.
+    but adding RGB_px's together proved awkward and unintuitive.
     My day was ruined and my disappointment immeasurable.
     I ended up using custom mean for RGB_px
 */
 
 // returns arithmetic mean of vector elements
 template <typename T = Utility::byte_t>
-T mean(const std::vector<T>& elems)
+T mean(const vector<T>& elems)
 {
-    // note: std::reduce was a lot slower
-    int64_t sum = std::accumulate(std::begin(elems), std::end(elems), 0);
+    // note: reduce made no difference, probably too few elems
+    int64_t sum = accumulate(begin(elems), end(elems), 0);
     return sum / elems.size();
 };
 
 // returns median value from a 2x2 sample at [row, col]
 template <typename T = Utility::byte_t>
-T median(std::vector<T>& elems)
+T median(vector<T>& elems)
 {
     if (elems.size() == 1) return elems[0];
 
-    std::sort(std::begin(elems), std::end(elems));
+    sort(begin(elems), end(elems));
     size_t middle = elems.size() / 2;
 
     return middle % 2 == 0
@@ -83,9 +86,9 @@ T median(std::vector<T>& elems)
 
 // returns max value from a 2x2 sample at [row, col]
 template <typename T = Utility::byte_t>
-T max(const std::vector<T>& elems)
+T maximum(const vector<T>& elems)
 {
-    return *std::max_element(std::begin(elems), std::end(elems));
+    return *max_element(begin(elems), end(elems));
 };
 
-}  // ::Sample
+}  // end of ::Sample

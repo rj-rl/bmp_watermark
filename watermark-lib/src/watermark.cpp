@@ -28,7 +28,7 @@ bool add_watermark(YUV& vid, const BMP& bmp,
     int32_t step_y = 2 * dvd_speed;  // 2, because chroma isn't sampled
     int32_t step_x = 2 * dvd_speed;  // at odd columns and rows
 
-    const auto pic = BMP_to_YUV420_par(bmp);
+    const auto pic = BMP_to_YUV420(bmp);
     // total number of BOTH chroma components per image/frame
     const auto src_chroma_size = chroma_count_420(pic.width, pic.height);
     const auto dst_chroma_size = chroma_count_420(vid.width, vid.height);

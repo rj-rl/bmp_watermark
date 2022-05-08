@@ -10,12 +10,13 @@
 #include <utility>
 #include <stddef.h>
 
+// converts a BMP into YUV444p
 YUV BMP_to_YUV444(const BMP& bmp);
 
-YUV BMP_to_YUV420(const BMP& bmp);
+// converts a BMP into YUV420p, either sequentially or in parallel
+YUV BMP_to_YUV420(const BMP& bmp, bool do_run_in_parallel = true);
 
-YUV BMP_to_YUV420_par(const BMP& bmp);
-
+// converts a YUV444p into YUV420p using custom sampling method
 template<typename TSampler>
 YUV YUV444_to_YUV420(const YUV& src, TSampler sampler)
 {

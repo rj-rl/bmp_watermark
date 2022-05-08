@@ -34,7 +34,7 @@ public:
     {
         return begin_[i];
     }
-
+    // returns element [row, col] as if by indexing two dimensional array
     TValue& operator() (size_t row, size_t col)
     {
         return begin_[row * width_ + col];
@@ -72,4 +72,4 @@ private:
     size_t height_;
 };
 
-} // ::Utility
+}  // end of ::Utility

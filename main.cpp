@@ -13,7 +13,6 @@
 #include <cstring>
 
 using namespace std;
-using namespace Utility;
 
 /*
     argv[1] - path to bmp
@@ -58,12 +57,16 @@ int main(int argc, const char* argv[])
 
     BMP bmp{path_to_bmp};
     YUV video{path_to_yuv, yuv_width, yuv_height, YUV::Type::Planar420};
-    add_watermark(video, bmp, pos_y, pos_x, animation_speed);
+    bool success = add_watermark(video, bmp, pos_y, pos_x, animation_speed);
+    if (!success) {
+        cerr << "Task failed successfully (pic dimensions > vid dimensions)\n";
+        return 2;
+    }
 
     ofstream out_file{out_path, ios::binary | ios::out};
     if (!out_file) {
         cerr << "Could not open file for output\n";
-        return 2;
+        return 3;
     }
     out_file.write(reinterpret_cast<char*>(&video.data[0]), video.data.size());
     return 0;

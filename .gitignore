@@ -1,4 +1,5 @@
-resources/
-**/makefile
-*.yuv
-*.bmp
+# ignore VS Code's settings
+.vscode
+
+# ignore cmake output
+build/**/*

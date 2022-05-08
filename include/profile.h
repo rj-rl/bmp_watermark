@@ -6,13 +6,14 @@
 
 using namespace std::chrono;
 
+namespace Utility {
+
 class Log_Duration {
 public:
-    explicit Log_Duration( const std::string& msg = "" )
-        : message( msg + ": " )
-        , start( steady_clock::now() )
-    {
-    }
+    explicit Log_Duration(const std::string& msg = "")
+        : message(msg + ": ")
+        , start(steady_clock::now())
+    {}
 
     ~Log_Duration()
     {
@@ -33,3 +34,5 @@ private:
 
 #define LOG_DURATION(message)             \
   Log_Duration UNIQ_ID(__LINE__){message};
+
+}  // end of ::Utility
