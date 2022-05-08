@@ -27,7 +27,7 @@ optional:
 int main(int argc, const char* argv[])
 {
     if (argc < 5) {
-        cout << "Usage: watermark path-to-bmp path-to-yuv"
+        cout << "Usage: watermark path-to-bmp path-to-yuv "
             "yuv-width yuv-height output-path [bmp_position_y bmp_position_x]";
         return 1;
     }
