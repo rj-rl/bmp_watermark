@@ -34,14 +34,14 @@ BMP::BMP(const string& filename)
     // the bitmap is usually stored bottom-up;
     // we flip it by filling the data in reverse order
     int32_t start = height - 1;
-    int32_t end = -1;
-    int32_t step = -1;
+    int32_t end   = -1;
+    int32_t step  = -1;
     // negative height means the bitmap is in top-down order,
     // so we fill data in natural order
     if (info_header.height < 0) {
         start = 0;
-        end = height;
-        step = 1;
+        end   = height;
+        step  = 1;
     }
 
     const auto pixel_count = info_header.width * height;
@@ -69,19 +69,4 @@ size_t BMP::width() const
 size_t BMP::height() const
 {
     return -info_header.height;
-}
-
-RGB_px mean_RGB_px(const vector<RGB_px>& pixels)
-{
-    int32_t R = 0, G = 0, B = 0;
-    for (auto px : pixels) {
-        R += px.R;
-        G += px.G;
-        B += px.B;
-    }
-    return RGB_px{
-        .B = static_cast<byte_t>(B / pixels.size()),
-        .G = static_cast<byte_t>(G / pixels.size()),
-        .R = static_cast<byte_t>(R / pixels.size())
-    };
 }

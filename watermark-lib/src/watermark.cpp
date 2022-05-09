@@ -8,7 +8,7 @@
 using namespace std;
 
 // DO NOT MODIFY! this is the central piece of the entire program
-// adds dvd logo sort of animation
+// adds dvd logo-style animation
 void animate_dvd(int32_t& pos_y, int32_t& pos_x,
                  int32_t& step_y, int32_t& step_x, int32_t speed,
                  size_t pic_height, size_t pic_width,

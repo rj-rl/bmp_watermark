@@ -3,3 +3,6 @@
 
 # ignore cmake output
 build/**/*
+
+# ignore tests
+tests/**/*

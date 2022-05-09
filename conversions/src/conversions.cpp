@@ -13,7 +13,6 @@ using namespace std;
 using namespace Utility;
 
 namespace {  // various utility constants, functions & types
-
 /*
     Two versions of RGB->YCbCr transformation matrices:
 
@@ -54,9 +53,10 @@ RGB_px mean_RGB_px(const vector<RGB_px>& pixels)
 // converts an RGB pixel into the luma component of a YCbCr pixel
 byte_t RGB_to_Y(RGB_px rgb_px)
 {
-    uint16_t Y = TV_matrix[0] * rgb_px.R
-        + TV_matrix[1] * rgb_px.G
-        + TV_matrix[2] * rgb_px.B;
+    uint16_t Y =
+        TV_matrix[0] * rgb_px.R +
+        TV_matrix[1] * rgb_px.G +
+        TV_matrix[2] * rgb_px.B;
     // scale down to 8 bit
     Y = (Y + 128) >> 8;
     // offset
@@ -71,13 +71,15 @@ struct Chroma {
 // converts an RGB pixel into the two chroma components of a YCbCr pixel
 Chroma RGB_to_CbCr(RGB_px rgb_px)
 {
-    int16_t Cb = TV_matrix[3] * rgb_px.R
-        + TV_matrix[4] * rgb_px.G
-        + TV_matrix[5] * rgb_px.B;
+    int16_t Cb =
+        TV_matrix[3] * rgb_px.R +
+        TV_matrix[4] * rgb_px.G +
+        TV_matrix[5] * rgb_px.B;
 
-    int16_t Cr = TV_matrix[6] * rgb_px.R
-        + TV_matrix[7] * rgb_px.G
-        + TV_matrix[8] * rgb_px.B;
+    int16_t Cr =
+        TV_matrix[6] * rgb_px.R +
+        TV_matrix[7] * rgb_px.G +
+        TV_matrix[8] * rgb_px.B;
     // scale down to 8 bit
     Cb = (Cb + 128) >> 8;
     Cr = (Cr + 128) >> 8;
@@ -116,27 +118,103 @@ vector<Matrix<T>> split_into_parts(const Matrix<T>& matrix, size_t part_height)
     return parts;
 }
 
-void process_part(Matrix<const RGB_px> rgb_matrix,
-                   vector<byte_t>::iterator dst_Y,
-                   vector<byte_t>::iterator dst_Cb,
-                   vector<byte_t>::iterator dst_Cr)
+// slow but pretty to look at, more flexible, a lot more easily testable;
+// used as a reference
+template <typename TSampler = decltype(mean_RGB_px)>
+void process_part_slow(Matrix<const RGB_px> rgb_matrix,
+                       vector<byte_t>::iterator dst_Y,
+                       vector<byte_t>::iterator dst_Cb,
+                       vector<byte_t>::iterator dst_Cr,
+                       TSampler sampler = mean_RGB_px)
 {
     for (size_t row = 0u; row < rgb_matrix.height(); ++row) {
         for (size_t col = 0u; col < rgb_matrix.width(); ++col) {
             // fill luma plane
             *dst_Y++ = RGB_to_Y(rgb_matrix(row, col));
-
             // sample every other pixel in every other row
             if (row % 2 == 0 && col % 2 == 0) {
                 // calculate mean RGB values
                 auto [Cb, Cr] = RGB_to_CbCr(
-                    Sample::sample(rgb_matrix, row, col, mean_RGB_px)
+                    Sample::sample(rgb_matrix, row, col, sampler)
                 );
                 // fill chrominance planes
                 *dst_Cb++ = Cb;
                 *dst_Cr++ = Cr;
             }
         }
+    }
+}
+
+void process_part_fast(Matrix<const RGB_px> rgb_matrix,
+                       vector<byte_t>::iterator dst_Y,
+                       vector<byte_t>::iterator dst_Cb,
+                       vector<byte_t>::iterator dst_Cr)
+{
+    auto width = rgb_matrix.width();
+    auto height = rgb_matrix.height();
+    auto src_rgb = begin(rgb_matrix);
+    // iterating until (height - 1) means next row always exists
+    // same with (width - 1) and next column
+    size_t row = 0u;
+    size_t col = 0u;
+    while (row < height - 1) {
+        col = 0u;
+        while (col < width - 1) {
+            // fill luma plane
+            *dst_Y++ = RGB_to_Y(*src_rgb);
+            *dst_Y++ = RGB_to_Y(*(src_rgb + 1));
+            // sample chroma at every other pixel in every other row
+            if (row % 2 == 0) {
+                // calculate mean RGB values
+                uint16_t R_mean = (src_rgb->R + (src_rgb + 1)->R +
+                    (src_rgb + width)->R + (src_rgb + width + 1)->R) / 4;
+                uint16_t G_mean = (src_rgb->G + (src_rgb + 1)->G +
+                    (src_rgb + width)->G + (src_rgb + width + 1)->G) / 4;
+                uint16_t B_mean = (src_rgb->B + (src_rgb + 1)->B +
+                    (src_rgb + width)->B + (src_rgb + width + 1)->B) / 4;
+                // fill chrominance planes
+                auto [Cb, Cr] = RGB_to_CbCr(RGB_px(B_mean, G_mean, R_mean));
+                *dst_Cb++ = Cb;
+                *dst_Cr++ = Cr;
+            }
+            col += 2;
+            src_rgb += 2;
+        }
+        if (col == (width - 1)) {  // we only get here if width was odd
+            auto [Y, Cb, Cr] = RGB_to_YCbCr_px(*src_rgb++);
+            *dst_Y++ = Y;
+            if (row % 2 == 0) {
+                *dst_Cb++ = Cb;
+                *dst_Cr++ = Cr;
+            }
+        }
+        // row done
+        ++row;
+    }
+    // do the last row
+    col = 0u;
+    while (col < width - 1) {
+        *dst_Y++ = RGB_to_Y(*src_rgb);
+        *dst_Y++ = RGB_to_Y(*(src_rgb + 1));
+
+        if (row % 2 == 0) {
+            uint16_t R_mean = (src_rgb->R + (src_rgb + 1)->R) / 2;
+            uint16_t G_mean = (src_rgb->G + (src_rgb + 1)->G) / 2;
+            uint16_t B_mean = (src_rgb->B + (src_rgb + 1)->B) / 2;
+
+            auto [Cb, Cr] = RGB_to_CbCr(RGB_px(B_mean, G_mean, R_mean));
+            *dst_Cb++ = Cb;
+            *dst_Cr++ = Cr;
+        }
+        col += 2;
+        src_rgb += 2;
+    }
+    // finally do the last element, we get here if width & height were both odd
+    if (col == (width - 1)) {
+        auto [Y, Cb, Cr] = RGB_to_YCbCr_px(*src_rgb++);
+        *dst_Y = Y;
+        *dst_Cb = Cb;
+        *dst_Cr = Cr;
     }
 }
 
@@ -183,15 +261,15 @@ YUV BMP_to_YUV420(const BMP& bmp, bool do_run_in_parallel)
 
     // sequential version: just process the entire matrix and return result
     if (!do_run_in_parallel) {
-        process_part(rgb_matrix, dst_Y, dst_Cb, dst_Cr);
+        process_part_fast(rgb_matrix, dst_Y, dst_Cb, dst_Cr);
         return YUV{move(yuv_data), width, height, YUV::Type::Planar420};
     }
 
     // parallel version: split the matrix and process parts in parallel
     const size_t concurrency = max(4u, thread::hardware_concurrency());
-    auto part_height = 
+    auto part_height =
         max<size_t>(2, (height + (concurrency - 1)) / concurrency);
-    // we want parts to be of even height because of the subsampling
+    // we want parts to be of even height for convenient 4:2:0 subsampling
     if (part_height % 2 == 1) {
         ++part_height;
     }
@@ -199,13 +277,12 @@ YUV BMP_to_YUV420(const BMP& bmp, bool do_run_in_parallel)
     const auto parts = split_into_parts(rgb_matrix, part_height);
     vector<future<void>> futures;
     for (auto part : parts) {
-        futures.push_back(async(process_part, part, dst_Y, dst_Cb, dst_Cr));
+        futures.push_back(async(process_part_fast, part, dst_Y, dst_Cb, dst_Cr));
         // shift the destination pointers by how much we've just filled
-        // the respective planes: Y by the number of elements in part
+        // the respective planes: Y by the total number of elements in part,
         // Cb and Cr by half the part's chroma count
         dst_Y += part.size();
-        const auto part_chroma_count =
-            chroma_count_420(width, part.height()) / 2;
+        auto part_chroma_count = chroma_count_420(width, part.height()) / 2;
         dst_Cb += part_chroma_count;
         dst_Cr += part_chroma_count;
     }

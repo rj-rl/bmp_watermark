@@ -6,6 +6,8 @@
 #include <concepts>
 #include <stddef.h>
 
+// TODO: add stride support
+
 namespace Utility {
 
 // abstracts contiguously stored elements as a rectangular matrix

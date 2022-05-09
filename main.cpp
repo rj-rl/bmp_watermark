@@ -13,7 +13,6 @@
 #include <cstring>
 
 using namespace std;
-
 /*
     argv[1] - path to bmp
     argv[2] - path to yuv

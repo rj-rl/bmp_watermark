@@ -19,8 +19,7 @@ using namespace std;
 // returns the elements of a 2x2 window (submatrix) starting at [row, col]
 // window is truncated if it doesn't fit
 template <typename T>
-vector<T> select(const Utility::Matrix<const T>& mat,
-                      size_t row, size_t col)
+vector<T> select(const Utility::Matrix<const T>& mat, size_t row, size_t col)
 {
     // 4 possible scenarios:
     //    1. [row, col] is not near an edge -> GREAT SUCCESS! window fits
@@ -55,7 +54,7 @@ TValue sample(const Utility::Matrix<const TValue>& mat,
 
 /*
     Below are the actual sampling functions.
-    These were supposed to be used for RGB data in the form of vector<RGB_px>,
+    These were supposed to be used for RGB data
     but adding RGB_px's together proved awkward and unintuitive.
     My day was ruined and my disappointment immeasurable.
     I ended up using custom mean for RGB_px
