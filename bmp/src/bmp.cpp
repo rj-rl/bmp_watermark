@@ -60,3 +60,12 @@ BMP::BMP(const string& filename)
         }
     }
 }
+
+size_t BMP::width() const
+{
+    return info_header.width;
+}
+size_t BMP::height() const
+{
+    return -info_header.height;
+}
