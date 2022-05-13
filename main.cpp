@@ -41,7 +41,7 @@ int main(int argc, const char* argv[])
     if (argv[5]) {
         out_path = argv[5];
     }
-    
+
     size_t pos_y = 0u;
     size_t pos_x = 0u;
     if (argc == 8) {

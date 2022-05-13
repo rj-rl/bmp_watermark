@@ -31,7 +31,7 @@ struct BMP_Info_Header {
     uint32_t clrs_imprtont  = 0u;  // number of important colors used,
 };
 
-// BGR channel order is assumed
+// BGR channel order is assumed (can't check without channel masks)
 struct RGB_px {
     Utility::byte_t B = 0u;
     Utility::byte_t G = 0u;
