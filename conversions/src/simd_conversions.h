@@ -7,7 +7,7 @@
 #include <cstdint>
 
 // partially splits stream of rgb data into separate channels
-// one call doubles the clumps: rgb rgb rgb ... -> rr gg bb rr gg ...
+// one call doubles the clumps: rgb rgb rgb ... -> rr gg bb rr gg ... -> rrrr gggg bbbb ...
 inline void deinterleave_rgb(
     __m128i  src1, __m128i  src2, __m128i  src3, __m128i  src4, __m128i  src5, __m128i  src6,
     __m128i* dst1, __m128i* dst2, __m128i* dst3, __m128i* dst4, __m128i* dst5, __m128i* dst6)
@@ -26,22 +26,26 @@ struct pair_128i {
     __m128i second;
 };
 
+// takes 16 8bit-sized unsigned ints, pads them with zero
+// and returns two packs of the same ints promoted to 16bit
 inline pair_128i promote_8_16(__m128i src)
 {
     return {_mm_unpacklo_epi8(src, _mm_setzero_si128()),
             _mm_unpackhi_epi8(src, _mm_setzero_si128())};
 }
 
-void simd_RGB_to_YUV420(const Utility::byte_t* rgb_top,
-                        const Utility::byte_t* rgb_bot,
-                        Utility::byte_t* dst_y_top,
-                        Utility::byte_t* dst_y_bot,
-                        Utility::byte_t* dst_cb,
-                        Utility::byte_t* dst_cr)
+// coverts a pack of 2x16 pixels
+// (16 pixels on the top row + 16 on the adjacent bottom row)
+inline void simd_RGB_to_YUV420(const Utility::byte_t* rgb_top,
+                               const Utility::byte_t* rgb_bot,
+                               Utility::byte_t* dst_y_top,
+                               Utility::byte_t* dst_y_bot,
+                               Utility::byte_t* dst_cb,
+                               Utility::byte_t* dst_cr)
 {
     using Utility::byte_t;
 
-    // the conversion coefficients
+    // the vectorized conversion coefficients
     static const auto y_r = _mm_set1_epi16(66);
     static const auto y_g = _mm_set1_epi16(129);
     static const auto y_b = _mm_set1_epi16(25);
@@ -67,7 +71,7 @@ void simd_RGB_to_YUV420(const Utility::byte_t* rgb_top,
     __m128i p6 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(rgb_bot + 32));
 
     // separate channels
-    __m128i t1, t2, t3, t4, t5, t6;  // temp variables
+    __m128i t1, t2, t3, t4, t5, t6;  // temp variables for layers
     deinterleave_rgb(p1, p2, p3, p4, p5, p6, &t1, &t2, &t3, &t4, &t5, &t6);  // each channel now in groups of 2
     deinterleave_rgb(t1, t2, t3, t4, t5, t6, &p1, &p2, &p3, &p4, &p5, &p6);  // groups of 4
     deinterleave_rgb(p1, p2, p3, p4, p5, p6, &t1, &t2, &t3, &t4, &t5, &t6);  // groups of 8

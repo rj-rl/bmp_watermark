@@ -25,15 +25,6 @@ optional:
 */
 int main(int argc, const char* argv[])
 {
-    // FIXME:
-    {
-        LOG_DURATION("parallalel version");
-        BMP t{"/home/rj_rl/Desktop/work/pics/oddity.bmp"};
-        auto res = BMP_to_YUV420_simd(t);
-        ofstream{"oddity_simd.yuv", ios::binary}.write(reinterpret_cast<char*>(&res.data[0]), res.data.size());
-    }
-
-    
     if (argc < 5) {
         cout << "Usage: watermark path-to-bmp path-to-yuv "
             "yuv-width yuv-height output-path [bmp_position_y bmp_position_x]\n";
@@ -50,7 +41,7 @@ int main(int argc, const char* argv[])
     if (argv[5]) {
         out_path = argv[5];
     }
-    
+
     size_t pos_y = 0u;
     size_t pos_x = 0u;
     if (argc == 8) {
