@@ -1,6 +1,7 @@
 add_library(
     conversions
     src/conversions.h
+    src/simd_conversions.h
     src/conversions.cpp
     )
 
@@ -14,6 +15,7 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/subsample-algo/src
 )
 
-find_package(Threads)
+target_compile_options(conversions PRIVATE -march=native)
 
+find_package(Threads)
 target_link_libraries(conversions PUBLIC bmp yuv ${CMAKE_THREAD_LIBS_INIT})
